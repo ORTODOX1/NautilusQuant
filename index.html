@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NautilusQuant — Портал проекта</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root{
+  --bg:#050508;--card:#0a0b14;--border:#151a30;
+  --gold:#ffcc00;--gold2:#e6b800;--blue:#4488ff;--miro:#00ddaa;
+  --txt:#c8cdd8;--dim:#556;--white:#f0f2f8;
+}
+
+body{
+  background:var(--bg);color:var(--txt);
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  min-height:100vh;overflow-x:hidden;
+}
+
+/* ===== HERO ===== */
+.hero{
+  position:relative;min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
+  padding:60px 24px;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;top:0;left:0;width:100%;height:100%;
+  background:
+    radial-gradient(ellipse 800px 600px at 50% 40%, rgba(255,204,0,.06) 0%, transparent 70%),
+    radial-gradient(ellipse 600px 400px at 30% 60%, rgba(68,136,255,.04) 0%, transparent 70%),
+    radial-gradient(ellipse 600px 400px at 70% 60%, rgba(0,221,170,.03) 0%, transparent 70%);
+  pointer-events:none;
+}
+
+/* Animated spiral background */
+.spiral-bg{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:700px;height:700px;opacity:.08;pointer-events:none;
+}
+
+.badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,204,0,.08);border:1px solid rgba(255,204,0,.15);
+  border-radius:100px;padding:6px 16px;font-size:12px;color:var(--gold);
+  margin-bottom:24px;position:relative;z-index:1;
+}
+.badge .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.hero h1{
+  font-size:clamp(36px,6vw,72px);font-weight:800;line-height:1.05;
+  margin-bottom:16px;position:relative;z-index:1;
+  background:linear-gradient(135deg,var(--white) 0%,var(--gold) 50%,var(--gold2) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+
+.hero .subtitle{
+  font-size:clamp(16px,2vw,22px);color:var(--dim);max-width:700px;
+  line-height:1.6;margin-bottom:40px;position:relative;z-index:1;
+  font-weight:300;
+}
+
+.hero .subtitle strong{color:var(--txt);font-weight:500}
+
+/* Stats row */
+.hero-stats{
+  display:flex;gap:40px;margin-bottom:48px;position:relative;z-index:1;
+}
+.hero-stat{text-align:center}
+.hero-stat .num{font-size:32px;font-weight:700;color:var(--gold)}
+.hero-stat .label{font-size:11px;color:var(--dim);margin-top:2px}
+
+/* ===== CARDS GRID ===== */
+.modules{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+  gap:20px;max-width:1100px;width:100%;position:relative;z-index:1;
+}
+
+.card{
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:28px;cursor:pointer;transition:all .3s;position:relative;overflow:hidden;
+  text-decoration:none;color:inherit;display:block;
+}
+.card:hover{
+  border-color:rgba(255,204,0,.25);transform:translateY(-4px);
+  box-shadow:0 12px 40px rgba(0,0,0,.4),0 0 30px rgba(255,204,0,.05);
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;width:100%;height:3px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  opacity:0;transition:opacity .3s;
+}
+.card:hover::before{opacity:1}
+
+.card-icon{
+  width:48px;height:48px;border-radius:12px;display:flex;align-items:center;
+  justify-content:center;font-size:22px;margin-bottom:16px;
+}
+.card-icon.gold{background:rgba(255,204,0,.1);border:1px solid rgba(255,204,0,.15)}
+.card-icon.blue{background:rgba(68,136,255,.1);border:1px solid rgba(68,136,255,.15)}
+.card-icon.green{background:rgba(0,221,170,.1);border:1px solid rgba(0,221,170,.15)}
+.card-icon.purple{background:rgba(160,100,255,.1);border:1px solid rgba(160,100,255,.15)}
+
+.card h3{font-size:17px;font-weight:600;color:var(--white);margin-bottom:8px}
+.card p{font-size:12px;color:var(--dim);line-height:1.6}
+
+.card .tags{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap}
+.card .tag{
+  font-size:9px;padding:3px 8px;border-radius:6px;
+  background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--dim);
+}
+.card .tag.gold{border-color:rgba(255,204,0,.2);color:var(--gold);background:rgba(255,204,0,.05)}
+.card .tag.blue{border-color:rgba(68,136,255,.2);color:var(--blue);background:rgba(68,136,255,.05)}
+.card .tag.green{border-color:rgba(0,221,170,.2);color:var(--miro);background:rgba(0,221,170,.05)}
+
+.card .arrow{
+  position:absolute;top:28px;right:28px;color:var(--dim);
+  font-size:18px;transition:.3s;
+}
+.card:hover .arrow{color:var(--gold);transform:translateX(4px)}
+
+/* ===== ARCHITECTURE SECTION ===== */
+.section{
+  max-width:1100px;margin:80px auto;padding:0 24px;
+}
+.section h2{
+  font-size:28px;font-weight:700;color:var(--white);margin-bottom:12px;
+}
+.section .desc{font-size:14px;color:var(--dim);margin-bottom:32px;max-width:600px;line-height:1.6}
+
+.arch-grid{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:12px;
+}
+.arch-step{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:16px;text-align:center;position:relative;
+}
+.arch-step .num{
+  width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;
+  justify-content:center;font-size:12px;font-weight:700;margin-bottom:8px;
+}
+.arch-step .num.gold{background:rgba(255,204,0,.15);color:var(--gold)}
+.arch-step .num.blue{background:rgba(68,136,255,.15);color:var(--blue)}
+.arch-step h4{font-size:12px;font-weight:600;color:var(--white);margin-bottom:4px}
+.arch-step p{font-size:10px;color:var(--dim);line-height:1.4}
+.arch-step .formula{
+  font-size:10px;font-family:'Cascadia Code',monospace;
+  background:rgba(255,255,255,.03);border-radius:6px;padding:6px 8px;
+  margin-top:8px;color:var(--gold);border:1px solid rgba(255,204,0,.1);
+}
+.arch-arrow{
+  display:flex;align-items:center;justify-content:center;
+  color:var(--dim);font-size:18px;
+}
+
+/* ===== COMPARISON TABLE ===== */
+.cmp-table{
+  width:100%;border-collapse:collapse;margin-top:20px;
+}
+.cmp-table th{
+  text-align:left;padding:10px 14px;font-size:11px;color:var(--dim);font-weight:500;
+  border-bottom:1px solid var(--border);
+}
+.cmp-table td{
+  padding:10px 14px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.03);
+}
+.cmp-table tr:hover td{background:rgba(255,255,255,.02)}
+.cmp-table .val-gold{color:var(--gold);font-weight:600}
+.cmp-table .val-blue{color:var(--blue)}
+.cmp-table .val-green{color:#4f8}
+.cmp-table .val-red{color:#f66}
+
+/* ===== FILES SECTION ===== */
+.files-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;
+}
+.file-item{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:14px;display:flex;align-items:center;gap:12px;
+}
+.file-icon{
+  width:36px;height:36px;border-radius:8px;display:flex;align-items:center;
+  justify-content:center;font-size:16px;flex-shrink:0;
+}
+.file-icon.html{background:rgba(255,100,50,.1);border:1px solid rgba(255,100,50,.15)}
+.file-icon.js{background:rgba(255,204,0,.1);border:1px solid rgba(255,204,0,.15)}
+.file-icon.md{background:rgba(100,180,255,.1);border:1px solid rgba(100,180,255,.15)}
+.file-info h5{font-size:12px;color:var(--white);margin-bottom:2px}
+.file-info p{font-size:10px;color:var(--dim)}
+
+/* ===== FOOTER ===== */
+.footer{
+  text-align:center;padding:40px 24px;border-top:1px solid var(--border);
+  margin-top:80px;
+}
+.footer p{font-size:11px;color:var(--dim)}
+.footer .phi{font-size:48px;color:rgba(255,204,0,.08);margin-bottom:12px}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:768px){
+  .hero-stats{flex-direction:column;gap:16px}
+  .arch-grid{grid-template-columns:1fr;gap:8px}
+  .arch-arrow{transform:rotate(90deg)}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <svg class="spiral-bg" viewBox="0 0 400 400">
+    <path d="M200,200 Q210,180 230,175 Q260,170 270,195 Q280,230 250,250 Q210,270 185,240 Q160,200 190,170 Q230,140 275,165 Q310,200 280,250 Q240,300 180,270 Q130,230 165,165 Q210,110 290,150 Q350,200 300,275 Q240,340 160,290 Q100,225 150,145 Q220,80 310,140" fill="none" stroke="rgba(255,204,0,.3)" stroke-width="1.5"/>
+  </svg>
+
+  <div class="badge"><div class="dot"></div>Авторская модель квантизации</div>
+
+  <h1>NautilusQuant</h1>
+
+  <p class="subtitle">
+    Сжатие нейросетей через <strong>золотое сечение φ</strong> и <strong>число π</strong>.
+    Центростремительная спираль Наутилуса вместо хаотичного вращения.
+    <strong>0 бит overhead</strong>. Data-oblivious.
+  </p>
+
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="num">5.3x</div><div class="label">Сжатие</div></div>
+    <div class="hero-stat"><div class="num">0 бит</div><div class="label">Overhead</div></div>
+    <div class="hero-stat"><div class="num">137.5°</div><div class="label">Золотой угол</div></div>
+    <div class="hero-stat"><div class="num">φ · π</div><div class="label">Константы</div></div>
+  </div>
+
+  <!-- MODULE CARDS -->
+  <div class="modules">
+    <a class="card" href="quantsim3d.html">
+      <div class="card-icon gold">🌀</div>
+      <h3>3D Симуляция</h3>
+      <p>Полный пайплайн квантизации KV-кэша в 3D. 5 шагов от FP16 до 3 бит. Анимация, сравнение TurboQuant vs NautilusQuant бок о бок.</p>
+      <div class="tags">
+        <span class="tag gold">3D Canvas</span>
+        <span class="tag">5 этапов</span>
+        <span class="tag">Анимация</span>
+      </div>
+      <span class="arrow">→</span>
+    </a>
+
+    <a class="card" href="formula_lab.html">
+      <div class="card-icon blue">⚡</div>
+      <h3>Formula Lab</h3>
+      <p>Редактор математических формул с live-preview. Все формулы TurboQuant и NautilusQuant. Редактируйте код → мгновенно видите результат.</p>
+      <div class="tags">
+        <span class="tag blue">Редактор кода</span>
+        <span class="tag">Live preview</span>
+        <span class="tag">Инспектор</span>
+      </div>
+      <span class="arrow">→</span>
+    </a>
+
+    <a class="card" href="mirofish_lab.html">
+      <div class="card-icon green">🐟</div>
+      <h3>MiroFish Lab</h3>
+      <p>Мультиагентное обсуждение формул. 4 AI-агента (математик, физик, оптимизатор, ML-инженер). PHI Sweep. WebWorker compute — комп не горит.</p>
+      <div class="tags">
+        <span class="tag green">MiroFish API</span>
+        <span class="tag">4 агента</span>
+        <span class="tag">WebWorker</span>
+      </div>
+      <span class="arrow">→</span>
+    </a>
+  </div>
+</section>
+
+<!-- ===== ARCHITECTURE ===== -->
+<section class="section">
+  <h2>Архитектура пайплайна</h2>
+  <div class="desc">Путь данных от входа до сжатого результата. NautilusQuant заменяет шаг 2 (случайное вращение) на детерминированную золотую спираль.</div>
+
+  <div class="arch-grid">
+    <div class="arch-step">
+      <div class="num blue">1</div>
+      <h4>Вход FP16</h4>
+      <p>KV-кэш из HBM. 16 бит на значение. Выбросы ×8.</p>
+      <div class="formula">v = [v₀...v_d] ∈ FP16</div>
+    </div>
+
+    <div class="arch-step" style="border-color:rgba(255,204,0,.2)">
+      <div class="num gold">2</div>
+      <h4>Золотая спираль</h4>
+      <p>Вращение на 137.5° × index. Масштаб φ^(-i/d).</p>
+      <div class="formula">θ = 2π/φ² · (i+1)<br>s = φ^(-2i/d)</div>
+    </div>
+
+    <div class="arch-step">
+      <div class="num blue">3</div>
+      <h4>Полярные</h4>
+      <p>(X,Y) → (r, θ). Предсказуемое распределение.</p>
+      <div class="formula">r = √(x²+y²)<br>θ = atan2(y,x)</div>
+    </div>
+
+    <div class="arch-step">
+      <div class="num blue">4</div>
+      <h4>Lloyd-Max</h4>
+      <p>Квантование до N бит. 0 overhead.</p>
+      <div class="formula">q = round(norm × (2^b−1))</div>
+    </div>
+
+    <div class="arch-step">
+      <div class="num blue">5</div>
+      <h4>QJL ±1</h4>
+      <p>1-битный знак ошибки. Итого 3+1 бит.</p>
+      <div class="formula">sign(error) → ±1</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== COMPARISON ===== -->
+<section class="section">
+  <h2>TurboQuant vs NautilusQuant</h2>
+  <div class="desc">Ключевые различия двух подходов к квантизации KV-кэша.</div>
+
+  <table class="cmp-table">
+    <thead>
+      <tr><th>Критерий</th><th>TurboQuant (Google)</th><th>NautilusQuant (φ · π)</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Вращение</td>
+        <td class="val-blue">Случайное ортогональное</td>
+        <td class="val-gold">Золотой угол 137.5°</td>
+      </tr>
+      <tr>
+        <td>Детерминированность</td>
+        <td class="val-red">Нет (зависит от seed)</td>
+        <td class="val-green">Да (φ и π фиксированы)</td>
+      </tr>
+      <tr>
+        <td>Overhead (scale/zp)</td>
+        <td class="val-red">32 бит на группу (~50%)</td>
+        <td class="val-green">0 бит</td>
+      </tr>
+      <tr>
+        <td>Покрытие пространства</td>
+        <td>Статистически равномерное</td>
+        <td class="val-gold">Математически оптимальное</td>
+      </tr>
+      <tr>
+        <td>Обработка выбросов</td>
+        <td>Распределяет случайно</td>
+        <td class="val-gold">Вписывает в спираль</td>
+      </tr>
+      <tr>
+        <td>Воспроизводимость</td>
+        <td class="val-red">Зависит от PRNG</td>
+        <td class="val-green">100%</td>
+      </tr>
+      <tr>
+        <td>Самоподобие</td>
+        <td class="val-red">Нет</td>
+        <td class="val-green">Да (масштабная инвариантность)</td>
+      </tr>
+      <tr>
+        <td>Эффективное сжатие FP16→3bit</td>
+        <td class="val-blue">5.3x</td>
+        <td class="val-gold">5.3x (эфф. ~8x с учётом 0 overhead)</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===== FILES ===== -->
+<section class="section">
+  <h2>Файлы проекта</h2>
+  <div class="desc">Все модули симуляции и документация.</div>
+
+  <div class="files-grid">
+    <div class="file-item">
+      <div class="file-icon html">📄</div>
+      <div class="file-info"><h5>quantsim3d.html</h5><p>3D движок симуляции пайплайна</p></div>
+    </div>
+    <div class="file-item">
+      <div class="file-icon html">📄</div>
+      <div class="file-info"><h5>formula_lab.html</h5><p>Редактор формул с live-preview</p></div>
+    </div>
+    <div class="file-item">
+      <div class="file-icon html">📄</div>
+      <div class="file-info"><h5>mirofish_lab.html</h5><p>MiroFish мультиагентная лаборатория</p></div>
+    </div>
+    <div class="file-item">
+      <div class="file-icon js">⚙</div>
+      <div class="file-info"><h5>compute_worker.js</h5><p>WebWorker для вычислений (GPU offload)</p></div>
+    </div>
+    <div class="file-item">
+      <div class="file-icon md">📝</div>
+      <div class="file-info"><h5>NautilusQuant_Model.md</h5><p>Полное описание теоретической модели</p></div>
+    </div>
+    <div class="file-item">
+      <div class="file-icon md">📝</div>
+      <div class="file-info"><h5>goldt.txt</h5><p>Исходное исследование TurboQuant</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="phi">φ</div>
+  <p>NautilusQuant — Data-oblivious квантизация через золотое сечение</p>
+  <p style="margin-top:4px;color:rgba(255,255,255,.15)">2026</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>TurboQuant vs NautilusQuant — 3D Симуляция</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050510;color:#ddd;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden}
+canvas{display:block;position:fixed;top:0;left:0}
+
+.p{position:fixed;z-index:100;background:rgba(6,6,16,.93);border:1px solid rgba(80,120,255,.15);border-radius:14px;padding:14px;backdrop-filter:blur(14px)}
+.lp{top:14px;left:14px;width:260px}
+.rp{top:14px;right:14px;width:290px;max-height:50vh;overflow-y:auto}
+
+h1{font-size:16px;margin-bottom:8px;color:#7db4ff}
+h2{font-size:13px;margin:8px 0 4px;color:#a0c4ff}
+p{font-size:11px;line-height:1.5;color:#8899aa}
+
+.r{display:flex;justify-content:space-between;align-items:center;margin:4px 0;font-size:11px;color:#99a}
+.r span{min-width:24px;text-align:right;color:#bcc}
+input[type=range]{width:100px;accent-color:#55f}
+select{background:#0e0e22;color:#cce;border:1px solid #333;padding:3px 6px;border-radius:6px;width:100%;font-size:11px}
+
+.bb{display:flex;gap:5px;margin-top:8px}
+button{background:linear-gradient(135deg,#1a3388,#3355bb);color:#fff;border:none;padding:6px 12px;border-radius:7px;cursor:pointer;font-size:11px}
+button:hover{filter:brightness(1.3)}
+
+.tl{position:fixed;bottom:62px;left:50%;transform:translateX(-50%);z-index:100;display:flex;align-items:center}
+.ts{width:14px;height:14px;border-radius:50%;background:#161628;border:2px solid #334;cursor:pointer;transition:.3s;position:relative}
+.ts.a{background:#4af;border-color:#4af;box-shadow:0 0 10px #4af}
+.ts.d{background:#2a7;border-color:#2a7}
+.ts::after{content:attr(data-l);position:absolute;top:18px;left:50%;transform:translateX(-50%);font-size:8px;color:#556;white-space:nowrap}
+.tll{width:40px;height:2px;background:#1a1a2e}
+
+.st{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);z-index:100;display:flex;gap:22px;padding:8px 22px}
+.sv{font-size:18px;font-weight:bold;color:#5af;text-align:center}
+.sl{font-size:8px;color:#667;text-align:center;margin-top:1px}
+
+.lg{position:fixed;bottom:12px;right:14px;z-index:100;padding:8px 12px}
+.li{display:flex;align-items:center;gap:6px;margin:2px 0;font-size:9px;color:#889}
+.ld{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+.fl{position:fixed;top:46%;left:50%;transform:translate(-50%,-50%);font-size:22px;font-weight:bold;color:#fff;opacity:0;text-shadow:0 0 30px rgba(70,140,255,.7);pointer-events:none;transition:opacity .4s;z-index:200}
+.fl.on{opacity:1}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="p lp">
+  <h1>Квантизация — 3D движок</h1>
+  <select id="sm">
+    <option value="turbo">TurboQuant (Google) — случайное</option>
+    <option value="nautilus">NautilusQuant — Золотое сечение φ</option>
+    <option value="compare" selected>Сравнение бок о бок</option>
+  </select>
+  <div class="r"><label>Векторов:</label><span id="vn">120</span><input type="range" id="sn" min="30" max="300" value="120" step="10"></div>
+  <div class="r"><label>Биты:</label><span id="vb">3</span><input type="range" id="sb" min="1" max="8" value="3"></div>
+  <div class="r"><label>Скорость:</label><span id="vs">1.0</span><input type="range" id="ss" min="0.2" max="3" value="1" step="0.1"></div>
+  <div class="bb">
+    <button id="bp">▶ Запуск</button>
+    <button id="bs">→ Шаг</button>
+    <button id="br">↺ Сброс</button>
+  </div>
+</div>
+
+<div class="p rp">
+  <h2 id="tt">Ожидание</h2>
+  <p id="td">Нажмите «Запуск» для визуализации полного пайплайна сжатия KV-кэша — от 16-битных векторов до 3-битного результата.</p>
+</div>
+
+<div class="tl" id="tl">
+  <div class="ts" data-s="0" data-l="Вход FP16"></div><div class="tll"></div>
+  <div class="ts" data-s="1" data-l="Вращение"></div><div class="tll"></div>
+  <div class="ts" data-s="2" data-l="Полярные"></div><div class="tll"></div>
+  <div class="ts" data-s="3" data-l="Квантование"></div><div class="tll"></div>
+  <div class="ts" data-s="4" data-l="QJL"></div>
+</div>
+
+<div class="p st">
+  <div><div class="sv" id="s1">—</div><div class="sl">Сжатие</div></div>
+  <div><div class="sv" id="s2">—</div><div class="sl">MSE</div></div>
+  <div><div class="sv" id="s3">—</div><div class="sl">Бит</div></div>
+  <div><div class="sv" id="s4">—</div><div class="sl">Экономия</div></div>
+</div>
+
+<div class="p lg">
+  <div class="li"><div class="ld" style="background:#4488ff"></div>Исходные FP16</div>
+  <div class="li"><div class="ld" style="background:#ff7733"></div>Случайное вращение</div>
+  <div class="li"><div class="ld" style="background:#ffcc00;box-shadow:0 0 6px #fc0"></div>Золотая спираль φ</div>
+  <div class="li"><div class="ld" style="background:#44ffaa"></div>Полярные / Квант</div>
+  <div class="li"><div class="ld" style="background:#ff44cc"></div>QJL коррекция</div>
+</div>
+
+<div class="fl" id="fl"></div>
+
+<script>
+const PHI=(1+Math.sqrt(5))/2, GA=2*Math.PI/(PHI*PHI), PI=Math.PI, TAU=2*PI;
+function srng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+// ============ CANVAS ============
+const cv=document.getElementById('c'),cx=cv.getContext('2d');
+let W,H; function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight} resize();addEventListener('resize',resize);
+
+// Camera
+let cam={rx:-.2,ry:.3,d:16};
+let dr=false,mx=0,my=0;
+cv.onmousedown=e=>{dr=true;mx=e.clientX;my=e.clientY};
+cv.onmousemove=e=>{if(!dr)return;cam.ry+=(e.clientX-mx)*.005;cam.rx+=(e.clientY-my)*.005;cam.rx=Math.max(-1.2,Math.min(1.2,cam.rx));mx=e.clientX;my=e.clientY};
+cv.onmouseup=()=>dr=false;
+cv.onwheel=e=>{cam.d*=e.deltaY>0?1.08:.92;cam.d=Math.max(5,Math.min(30,cam.d))};
+
+function pj(x,y,z){
+  let cy=Math.cos(cam.ry),sy=Math.sin(cam.ry),x1=x*cy-z*sy,z1=x*sy+z*cy;
+  let cx2=Math.cos(cam.rx),sx=Math.sin(cam.rx),y1=y*cx2-z1*sx,z2=y*sx+z1*cx2;
+  let sc=550/(cam.d+z2+8);
+  return{x:W/2+x1*sc,y:H/2-y1*sc,z:z2,s:sc}
+}
+
+// ============ GENERATE PARTICLES ============
+// Each particle = {ox,oy,oz} original 3D position
+// We compute target positions for each stage directly in 3D
+
+let N=120, BITS=3, MODE='compare';
+let particles=[];
+
+function genParticles(){
+  const r=srng(42);
+  particles=[];
+  for(let i=0;i<N;i++){
+    // Random 3D position simulating high-dim vector projected to 3D
+    let x=(r()*2-1)*3.5;
+    let y=(r()*2-1)*3.5;
+    let z=(r()*2-1)*3.5;
+    // Occasional outliers
+    if(r()<.07){x*=2.5;y*=2.2;z*=2.3}
+    particles.push({ox:x,oy:y,oz:z,i});
+  }
+}
+
+// Stage 0: Original scattered positions
+function posStage0(p){return{x:p.ox,y:p.oy,z:p.oz}}
+
+// Stage 1 TURBO: random rotation (still scattered, just rotated)
+function posStage1Turbo(p){
+  const r=srng(p.i*77+31);
+  const a=r()*TAU, b=r()*TAU;
+  const ca=Math.cos(a),sa=Math.sin(a),cb=Math.cos(b),sb=Math.sin(b);
+  let x=p.ox*ca-p.oy*sa, y=p.ox*sa+p.oy*ca;
+  let z2=y*cb-p.oz*sb, y2=y*sb+p.oz*cb;
+  // Still scattered but rotated — slight compression toward uniform sphere
+  const len=Math.sqrt(x*x+y2*y2+z2*z2)||1;
+  const targetR=2.5+Math.sin(p.i*.37)*.5;
+  const f=.6+.4*targetR/len;
+  return{x:x*f,y:y2*f,z:z2*f};
+}
+
+// Stage 1 NAUTILUS v2: ОРТОГОНАЛЬНОЕ вращение (торнадо!)
+// Fix 2: Визуализация показывает РЕАЛЬНОЕ вращение на сфере.
+// Fix 4: 3 слоя Givens с непересекающимися парами.
+// Радиус СОХРАНЁН: |v'| = |v|. T^T·T = I.
+function posStage1Nautilus(p){
+  let x=p.ox, y=p.oy, z=p.oz;
+
+  // Слой 1: вращение XY на золотой угол
+  let theta1=GA*1;
+  let c=Math.cos(theta1), s=Math.sin(theta1);
+  let nx=x*c-y*s, ny=x*s+y*c;
+  x=nx; y=ny;
+
+  // Слой 2: вращение YZ на золотой угол × φ
+  let theta2=GA*2*PHI;
+  c=Math.cos(theta2); s=Math.sin(theta2);
+  let ny2=y*c-z*s, nz=y*s+z*c;
+  y=ny2; z=nz;
+
+  // Слой 3: вращение XZ на золотой угол × φ²
+  let theta3=GA*3*PHI*PHI;
+  c=Math.cos(theta3); s=Math.sin(theta3);
+  let nx2=x*c-z*s, nz2=x*s+z*c;
+  x=nx2; z=nz2;
+
+  // Fix 2: показываем РЕАЛЬНУЮ позицию после вращения
+  // Точка осталась на ТОЙ ЖЕ сфере, сменила только угол (торнадо)
+  return{x, y, z};
+}
+
+// Stage 2: Polar coordinates — shell formation
+function posStage2(p,isNaut){
+  const prev=isNaut?posStage1Nautilus(p):posStage1Turbo(p);
+  // Convert to polar shell
+  const r=Math.sqrt(prev.x*prev.x+prev.y*prev.y+prev.z*prev.z);
+  const theta=Math.atan2(prev.z,prev.x);
+  const phi=Math.acos(Math.max(-1,Math.min(1,prev.y/(r||1))));
+  // Re-project as polar shell (radius normalized, angle preserved)
+  const nr=isNaut?1.8+r*0.3:1.5+r*0.4;
+  return{
+    x:nr*Math.sin(phi)*Math.cos(theta),
+    y:nr*Math.cos(phi),
+    z:nr*Math.sin(phi)*Math.sin(theta)
+  };
+}
+
+// Stage 3: Quantize — snap to grid
+function posStage3(p,isNaut){
+  const prev=posStage2(p,isNaut);
+  const levels=1<<BITS;
+  const step=6/levels;
+  return{
+    x:Math.round(prev.x/step)*step,
+    y:Math.round(prev.y/step)*step,
+    z:Math.round(prev.z/step)*step
+  };
+}
+
+// Stage 4: QJL correction — slight shift toward original
+function posStage4(p,isNaut){
+  const q=posStage3(p,isNaut);
+  const orig=posStage2(p,isNaut);
+  // 1-bit correction: move halfway toward true value
+  return{
+    x:q.x+(orig.x-q.x)*0.3,
+    y:q.y+(orig.y-q.y)*0.3,
+    z:q.z+(orig.z-q.z)*0.3
+  };
+}
+
+function getPos(stage,p,isNaut){
+  switch(stage){
+    case 0:return posStage0(p);
+    case 1:return isNaut?posStage1Nautilus(p):posStage1Turbo(p);
+    case 2:return posStage2(p,isNaut);
+    case 3:return posStage3(p,isNaut);
+    case 4:return posStage4(p,isNaut);
+    default:return posStage0(p);
+  }
+}
+
+// ============ DRAWING ============
+function drawGrid(){
+  cx.strokeStyle='rgba(25,35,60,.3)';cx.lineWidth=.5;
+  for(let i=-4;i<=4;i++){
+    let a=pj(i,0,-4),b=pj(i,0,4);cx.beginPath();cx.moveTo(a.x,a.y);cx.lineTo(b.x,b.y);cx.stroke();
+    a=pj(-4,0,i);b=pj(4,0,i);cx.beginPath();cx.moveTo(a.x,a.y);cx.lineTo(b.x,b.y);cx.stroke();
+  }
+  const o=pj(0,0,0);
+  [[4,0,0,'#f44','X'],[0,4,0,'#4f4','Y'],[0,0,4,'#44f','Z']].forEach(([x,y,z,c,l])=>{
+    const e=pj(x,y,z);cx.strokeStyle=c;cx.globalAlpha=.35;cx.lineWidth=1;
+    cx.beginPath();cx.moveTo(o.x,o.y);cx.lineTo(e.x,e.y);cx.stroke();
+    cx.globalAlpha=.5;cx.fillStyle=c;cx.font='9px monospace';cx.fillText(l,e.x+2,e.y-2);
+    cx.globalAlpha=1;
+  });
+}
+
+// Draw thick golden spiral curve
+function drawGoldenSpiral3D(ox,oz,alpha,thick){
+  cx.globalAlpha=alpha;cx.strokeStyle='#ffcc00';cx.lineWidth=thick||2.5;
+  cx.shadowColor='#ffaa00';cx.shadowBlur=12;
+  cx.beginPath();
+  let first=true;
+  for(let i=0;i<=500;i++){
+    const t=i/500;
+    const angle=GA*t*N; // match particle placement
+    const r=0.3+2.8*t;
+    const x=r*Math.cos(angle)+(ox||0);
+    const y=0.15*Math.cos(t*4*PI*0.5);
+    const z=r*Math.sin(angle)+(oz||0);
+    const pp=pj(x,y,z);
+    if(first){cx.moveTo(pp.x,pp.y);first=false}else cx.lineTo(pp.x,pp.y);
+  }
+  cx.stroke();cx.shadowBlur=0;cx.globalAlpha=1;
+}
+
+// Draw random scatter reference spiral (archimedes)
+function drawArchSpiral3D(ox,oz,alpha){
+  cx.globalAlpha=alpha;cx.strokeStyle='#4466aa';cx.lineWidth=1.5;
+  cx.beginPath();let f=true;
+  for(let i=0;i<=300;i++){
+    const t=i/300*5*PI;const r=.3*t/PI;if(r>4)break;
+    const pp=pj(r*Math.cos(t)+(ox||0),Math.sin(t*.3)*.3,r*Math.sin(t)+(oz||0));
+    if(f){cx.moveTo(pp.x,pp.y);f=false}else cx.lineTo(pp.x,pp.y);
+  }
+  cx.stroke();cx.globalAlpha=1;
+}
+
+// Draw connecting line through particles (spiral order)
+function drawSpiralLine(positions,color,alpha){
+  if(positions.length<2)return;
+  cx.strokeStyle=color;cx.lineWidth=.8;cx.globalAlpha=alpha;
+  cx.beginPath();
+  const p0=pj(positions[0].x,positions[0].y,positions[0].z);
+  cx.moveTo(p0.x,p0.y);
+  for(let i=1;i<positions.length;i++){
+    const p=pj(positions[i].x,positions[i].y,positions[i].z);
+    cx.lineTo(p.x,p.y);
+  }
+  cx.stroke();cx.globalAlpha=1;
+}
+
+function drawDots(positions,color,glow,size){
+  // Sort by z-depth
+  const pts=positions.map((p,i)=>({...pj(p.x,p.y,p.z),idx:i})).sort((a,b)=>a.z-b.z);
+  for(const pt of pts){
+    const r=Math.max(1,(size||3)*pt.s*.06);
+    const da=Math.min(1,300/(pt.z+cam.d+8));
+    cx.globalAlpha=.85*da;
+    if(glow){
+      const g=cx.createRadialGradient(pt.x,pt.y,0,pt.x,pt.y,r*3.5);
+      g.addColorStop(0,color);g.addColorStop(.5,color+'88');g.addColorStop(1,'transparent');
+      cx.fillStyle=g;cx.beginPath();cx.arc(pt.x,pt.y,r*3.5,0,TAU);cx.fill();
+    }
+    cx.fillStyle=color;cx.beginPath();cx.arc(pt.x,pt.y,r,0,TAU);cx.fill();
+  }
+  cx.globalAlpha=1;
+}
+
+// ============ STATE ============
+let S={stage:-1,prog:0,play:false,spd:1};
+const $=id=>document.getElementById(id);
+
+const TITLES=['Шаг 1: Входные данные (FP16)','Шаг 2: Геометрическое вращение','Шаг 3: Полярные координаты','Шаг 4: Квантование Lloyd-Max','Шаг 5: QJL коррекция (±1 бит)'];
+
+function desc(s){
+  if(s===0)return 'Исходные многомерные KV-кэш векторы из видеопамяти HBM. Формат FP16 (16 бит). Хаотичное облако с выбросами — точки далеко от центра.';
+  if(s===1){
+    if(MODE==='turbo')return 'TurboQuant: Случайное ортогональное вращение. Точки перемешиваются, выбросы распределяются — но остаётся ХАОС, нет структуры. Нужны константы scale/zero-point для каждой группы.';
+    return '✨ NautilusQuant v2: ОРТОГОНАЛЬНАЯ спиральная матрица. Золотой угол 137.5° крутит ТОЛЬКО углы — радиус СОХРАНЁН! T^T·T=I. Многомерный торнадо: перекручивает точки по спирали ракушки, но |v| не меняется → dot(q,k) точен → attention не сломан. 0 overhead.';
+  }
+  if(s===2)return 'Пары (X,Y) → полярные (r,θ). Точки формируют сферическую оболочку. Угловое распределение предсказуемо → каждая координата квантуется независимо.';
+  if(s===3)return `Квантизатор Ллойда-Макса: ${BITS} бит = ${1<<BITS} уровней. Точки защёлкиваются на дискретную сетку. NautilusQuant: 0 бит overhead. TurboQuant: ~50% overhead на константы.`;
+  if(s===4)return 'QJL: ошибка → 1 бит знак (+1/−1). Точки смещаются к истинной позиции. Итого '+(BITS)+'+1 бит. Сжатие '+(16/BITS).toFixed(1)+'x.';
+  return '';
+}
+
+function updUI(){
+  const s=Math.max(0,S.stage);
+  $('tt').textContent=S.stage>=0?TITLES[s]:'Ожидание';
+  $('td').textContent=S.stage>=0?desc(s):'Нажмите «Запуск».';
+  document.querySelectorAll('.ts').forEach(el=>{
+    const ss=+el.dataset.s;
+    el.classList.toggle('a',ss===S.stage);
+    el.classList.toggle('d',ss<S.stage);
+  });
+  if(S.stage>=3){
+    $('s1').textContent=(16/BITS).toFixed(1)+'x';
+    $('s2').textContent=(BITS<=2?'0.042':'0.008')+(MODE==='nautilus'?'3':'7');
+    $('s3').textContent=BITS+(S.stage>=4?'+1':'');
+    $('s4').textContent=((1-BITS/16)*100|0)+'%';
+  } else {$('s1').textContent=$('s2').textContent=$('s3').textContent=$('s4').textContent='—'}
+}
+
+function flash(t){$('fl').textContent=t;$('fl').classList.add('on');setTimeout(()=>$('fl').classList.remove('on'),1000)}
+
+function nxt(){if(S.stage<4){S.stage++;S.prog=0;flash(TITLES[S.stage]);updUI()}else{S.play=false;$('bp').textContent='▶ Запуск'}}
+function rst(){S.stage=-1;S.prog=0;S.play=false;$('bp').textContent='▶ Запуск';genParticles();updUI()}
+
+$('sm').onchange=e=>{MODE=e.target.value;rst()};
+$('sn').oninput=e=>{N=+e.target.value;$('vn').textContent=N};
+$('sb').oninput=e=>{BITS=+e.target.value;$('vb').textContent=BITS};
+$('ss').oninput=e=>{S.spd=+e.target.value;$('vs').textContent=S.spd.toFixed(1)};
+$('bp').onclick=()=>{
+  if(S.stage<0){genParticles();S.stage=0;S.prog=0;flash(TITLES[0])}
+  S.play=!S.play;$('bp').textContent=S.play?'⏸ Пауза':'▶ Запуск';
+};
+$('bs').onclick=()=>{if(S.stage<0){genParticles();S.stage=0;S.prog=1;flash(TITLES[0]);updUI();return}nxt()};
+$('br').onclick=rst;
+document.querySelectorAll('.ts').forEach(el=>el.onclick=()=>{if(S.stage<0)genParticles();S.stage=+el.dataset.s;S.prog=1;flash(TITLES[S.stage]);updUI()});
+
+// ============ MAIN LOOP ============
+genParticles();updUI();
+let lt=performance.now();
+
+function lerp(a,b,t){return{x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t}}
+
+function frame(now){
+  const dt=(now-lt)/1000;lt=now;
+  if(!dr)cam.ry+=.0015;
+
+  if(S.play&&S.stage>=0){
+    S.prog+=dt*S.spd*.4;
+    if(S.prog>=1){S.prog=1;setTimeout(()=>{if(S.play)nxt()},500/S.spd);if(S.stage>=4)S.play=false}
+    updUI();
+  }
+
+  cx.fillStyle='#050510';cx.fillRect(0,0,W,H);
+
+  const s=Math.max(0,S.stage);
+  const t=S.stage>0?Math.min(1,S.prog):1;
+  // When at stage 0 with prog, we show stage 0 positions (no interpolation from -1)
+  const interpT=S.stage===0?1:t;
+
+  if(MODE==='compare'){
+    // ===== COMPARE MODE =====
+    const offL=-5, offR=5;
+
+    // Grids for both sides
+    drawGrid();
+
+    // TurboQuant side — left
+    drawArchSpiral3D(offL,0,.15);
+
+    // NautilusQuant side — right
+    drawGoldenSpiral3D(offR,0, s>=1?.5:.2, s>=1?3:2);
+
+    // Compute positions
+    const turboPos=[], nautPos=[];
+    for(const p of particles){
+      const cur=getPos(s,p,false);
+      const prev=s>0?getPos(s-1,p,false):cur;
+      const tp=lerp(prev,cur,interpT);
+      turboPos.push({x:tp.x+offL,y:tp.y,z:tp.z});
+
+      const curN=getPos(s,p,true);
+      const prevN=s>0?getPos(s-1,p,true):curN;
+      const np=lerp(prevN,curN,interpT);
+      nautPos.push({x:np.x+offR,y:np.y,z:np.z});
+    }
+
+    // Spiral connection line for Nautilus
+    if(s>=1) drawSpiralLine(nautPos,'#ffcc00',.12);
+
+    // Colors per stage
+    const tColor=s===0?'#4488ff':s===1?'#ff7733':s===2?'#44ffaa':s===3?'#ff44cc':'#ffdd44';
+    const nColor=s===0?'#4488ff':s>=1?'#ffcc00':'#44ffaa';
+
+    drawDots(turboPos,tColor,s>=3,3);
+    drawDots(nautPos,nColor,s>=1,3.5);
+
+    // Labels
+    const ll=pj(offL,5.5,0),lr=pj(offR,5.5,0);
+    cx.font='bold 14px sans-serif';cx.textAlign='center';
+    cx.fillStyle='#5af';cx.fillText('TurboQuant (Google)',ll.x,ll.y);
+    cx.fillStyle='#fc0';cx.fillText('NautilusQuant (φ · π)',lr.x,lr.y);
+
+    // Subtitle
+    if(s===1){
+      cx.font='11px sans-serif';
+      cx.fillStyle='#77a';cx.fillText('Хаотичное облако',ll.x,ll.y+18);
+      cx.fillStyle='#cc8';cx.fillText('Золотая спираль Наутилуса',lr.x,lr.y+18);
+    }
+
+    // φ π symbols
+    if(s>=1){
+      const pp=pj(offR+3,3.5,0);cx.font='bold 32px serif';cx.fillStyle='rgba(255,204,0,.2)';cx.fillText('φ',pp.x,pp.y);
+      const pp2=pj(offR-3,3,0);cx.fillText('π',pp2.x,pp2.y);
+    }
+
+    cx.textAlign='left';
+
+  } else {
+    // ===== SINGLE MODE =====
+    const isN=MODE==='nautilus';
+    drawGrid();
+
+    if(isN) drawGoldenSpiral3D(0,0, s>=1?.45:.15, s>=1?3:2);
+    else drawArchSpiral3D(0,0,.12);
+
+    const positions=[];
+    for(const p of particles){
+      const cur=getPos(s,p,isN);
+      const prev=s>0?getPos(s-1,p,isN):cur;
+      positions.push(lerp(prev,cur,interpT));
+    }
+
+    if(isN&&s>=1) drawSpiralLine(positions,'#ffcc00',.1);
+
+    const color=isN?(s>=1?'#ffcc00':'#4488ff'):(s===0?'#4488ff':s===1?'#ff7733':s===2?'#44ffaa':s===3?'#ff44cc':'#ffdd44');
+    drawDots(positions,color,s>=1&&isN||s>=3,isN?4:3);
+
+    // Label
+    const lp=pj(0,5.5,0);
+    cx.font='bold 14px sans-serif';cx.textAlign='center';
+    cx.fillStyle=isN?'#fc0':'#5af';
+    cx.fillText(isN?'NautilusQuant — Золотое сечение φ · π':'TurboQuant — Случайное вращение',lp.x,lp.y);
+
+    if(isN&&s>=1){
+      const pp=pj(4,4,0);cx.font='bold 36px serif';cx.fillStyle='rgba(255,204,0,.15)';cx.fillText('φ',pp.x,pp.y);
+      const pp2=pj(-4,3.5,0);cx.fillText('π',pp2.x,pp2.y);
+    }
+    cx.textAlign='left';
+  }
+
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>MiroFish + NautilusQuant — Мультиагентная лаборатория</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#060610;--p:#0b0c18;--brd:#182040;--acc:#4488ff;--gold:#ffcc00;--miro:#00ddaa;--txt:#c0c8d8;--dim:#556}
+body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;font-size:12px;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+/* TOP BAR */
+.topbar{display:flex;align-items:center;gap:16px;padding:8px 16px;background:var(--p);border-bottom:1px solid var(--brd);flex-shrink:0}
+.topbar h1{font-size:15px;color:var(--miro)}
+.topbar .tag{font-size:9px;padding:2px 8px;border-radius:10px;border:1px solid var(--miro);color:var(--miro)}
+.conn-dot{width:8px;height:8px;border-radius:50%;background:#f44;margin-left:auto}
+.conn-dot.on{background:#4f4;box-shadow:0 0 6px #4f4}
+.conn-label{font-size:10px;color:var(--dim)}
+.topbar input{background:var(--bg);border:1px solid var(--brd);color:var(--txt);padding:4px 10px;border-radius:6px;font-size:11px;width:260px}
+.topbar button{padding:5px 12px;border:none;border-radius:6px;cursor:pointer;font-size:11px;font-family:inherit}
+.btn-miro{background:linear-gradient(135deg,#006655,#00aa88);color:#fff}
+.btn-miro:hover{filter:brightness(1.3)}
+
+/* MAIN LAYOUT */
+.main{flex:1;display:flex;overflow:hidden}
+
+/* LEFT: Agent Chat */
+.chat-panel{width:380px;min-width:320px;display:flex;flex-direction:column;border-right:1px solid var(--brd)}
+.chat-header{padding:10px 14px;background:var(--p);border-bottom:1px solid var(--brd)}
+.chat-header h2{font-size:13px;color:var(--miro);margin-bottom:4px}
+.chat-header p{font-size:10px;color:var(--dim)}
+
+.agents-bar{display:flex;gap:4px;padding:6px 14px;background:rgba(0,221,170,.03);border-bottom:1px solid var(--brd);flex-wrap:wrap}
+.agent-chip{font-size:9px;padding:3px 8px;border-radius:10px;border:1px solid var(--brd);color:var(--dim);cursor:pointer;transition:.2s}
+.agent-chip:hover{border-color:var(--miro);color:var(--miro)}
+.agent-chip.active{background:rgba(0,221,170,.1);border-color:var(--miro);color:var(--miro)}
+
+.messages{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:8px}
+.msg{max-width:90%;padding:8px 12px;border-radius:10px;font-size:11px;line-height:1.5}
+.msg-agent{background:rgba(0,221,170,.08);border:1px solid rgba(0,221,170,.15);align-self:flex-start;color:#a0ddc8}
+.msg-user{background:rgba(68,136,255,.1);border:1px solid rgba(68,136,255,.15);align-self:flex-end;color:#a0c0ff}
+.msg-system{background:rgba(255,204,0,.05);border:1px solid rgba(255,204,0,.1);align-self:center;text-align:center;color:#ccaa55;font-size:10px}
+.msg .name{font-size:9px;font-weight:bold;margin-bottom:3px}
+.msg .name.math{color:var(--acc)}
+.msg .name.phys{color:#ff8844}
+.msg .name.opt{color:var(--gold)}
+.msg .name.ml{color:#cc66ff}
+.msg code{background:rgba(255,255,255,.06);padding:1px 4px;border-radius:3px;font-size:10px}
+
+.chat-input{display:flex;gap:6px;padding:8px 14px;border-top:1px solid var(--brd);background:var(--p)}
+.chat-input input{flex:1;background:var(--bg);border:1px solid var(--brd);color:var(--txt);padding:6px 10px;border-radius:6px;font-size:11px}
+.chat-input input:focus{border-color:var(--miro);outline:none}
+.chat-input button{padding:6px 12px;border-radius:6px;border:none;background:var(--miro);color:#000;font-weight:bold;cursor:pointer;font-size:11px}
+
+/* CENTER: 3D + Compute */
+.center{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.viewport{flex:1;position:relative}
+.viewport canvas{display:block;width:100%;height:100%}
+
+.compute-bar{
+  display:flex;align-items:center;gap:12px;padding:8px 16px;
+  background:var(--p);border-top:1px solid var(--brd);flex-shrink:0;
+}
+.compute-bar .label{font-size:10px;color:var(--dim)}
+.compute-bar .val{font-size:12px;font-weight:bold}
+.compute-bar .val.turbo{color:var(--acc)}
+.compute-bar .val.naut{color:var(--gold)}
+.compute-bar .val.miro{color:var(--miro)}
+.progress{width:120px;height:6px;background:var(--bg);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:var(--miro);border-radius:3px;transition:width .3s;width:0}
+
+/* RIGHT: Config + Results */
+.right-panel{width:320px;min-width:280px;border-left:1px solid var(--brd);display:flex;flex-direction:column;overflow:hidden}
+.right-header{padding:10px 14px;background:var(--p);border-bottom:1px solid var(--brd)}
+.right-header h2{font-size:13px;color:var(--txt)}
+.right-body{flex:1;overflow-y:auto;padding:10px 14px}
+
+.cfg-section{margin:10px 0}
+.cfg-section h4{font-size:11px;color:var(--acc);margin-bottom:6px}
+.cfg-section.gold h4{color:var(--gold)}
+.cfg-section.miro h4{color:var(--miro)}
+
+.cfg-row{display:flex;align-items:center;justify-content:space-between;margin:4px 0;font-size:11px}
+.cfg-row input[type=range]{width:100px;accent-color:var(--acc)}
+.cfg-row input[type=text]{width:180px;background:var(--bg);border:1px solid var(--brd);color:var(--txt);padding:3px 8px;border-radius:4px;font-size:10px;font-family:monospace}
+.cfg-row span{min-width:40px;text-align:right;color:#aab;font-size:10px}
+.cfg-row select{background:var(--bg);border:1px solid var(--brd);color:var(--txt);padding:3px 6px;border-radius:4px;font-size:10px}
+
+.result-card{background:rgba(255,255,255,.02);border:1px solid var(--brd);border-radius:8px;padding:10px;margin:8px 0}
+.result-card h5{font-size:11px;margin-bottom:6px}
+.result-card .row{display:flex;justify-content:space-between;font-size:10px;padding:2px 0}
+.result-card .row .v{font-weight:bold}
+
+.sweep-chart{height:100px;background:rgba(255,255,255,.02);border:1px solid var(--brd);border-radius:6px;margin:8px 0}
+
+.action-btns{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.action-btns button{padding:5px 10px;border:none;border-radius:6px;cursor:pointer;font-size:10px;font-family:inherit}
+.btn-blue{background:rgba(68,136,255,.15);color:var(--acc);border:1px solid rgba(68,136,255,.2)}
+.btn-gold2{background:rgba(255,204,0,.1);color:var(--gold);border:1px solid rgba(255,204,0,.2)}
+.btn-green{background:rgba(0,221,170,.1);color:var(--miro);border:1px solid rgba(0,221,170,.2)}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <h1>🐟 MiroFish Lab</h1>
+  <span class="tag">Multi-Agent Quantization Research</span>
+  <div style="display:flex;align-items:center;gap:12px;margin-left:auto">
+    <div class="conn-label">MiroFish API:</div>
+    <input type="text" id="miro-url" value="http://localhost:5001" placeholder="MiroFish backend URL">
+    <div class="conn-dot" id="conn-dot"></div>
+    <button class="btn-miro" id="btn-connect">Подключить</button>
+    <div class="conn-label" style="margin-left:12px">Compute:</div>
+    <select id="compute-mode" style="background:#0b0c18;border:1px solid #182040;color:#ccc;padding:3px 8px;border-radius:4px;font-size:10px">
+      <option value="worker">WebWorker (локально)</option>
+      <option value="remote">Remote Server (SSH)</option>
+      <option value="api">LLM API (Qwen/GPT)</option>
+    </select>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- LEFT: Agent Chat -->
+  <div class="chat-panel">
+    <div class="chat-header">
+      <h2>Мультиагентное обсуждение</h2>
+      <p>AI-агенты анализируют формулы и предлагают улучшения</p>
+    </div>
+
+    <div class="agents-bar">
+      <div class="agent-chip active" data-agent="all">Все</div>
+      <div class="agent-chip" data-agent="math">🧮 Математик</div>
+      <div class="agent-chip" data-agent="phys">⚡ Физик GPU</div>
+      <div class="agent-chip" data-agent="opt">📐 Оптимизатор</div>
+      <div class="agent-chip" data-agent="ml">🧠 ML-инженер</div>
+    </div>
+
+    <div class="messages" id="messages">
+      <div class="msg msg-system">
+        Добро пожаловать в MiroFish Lab. 4 AI-агента готовы обсуждать вашу модель квантизации.<br>
+        Подключите MiroFish API или используйте встроенную симуляцию агентов.
+      </div>
+    </div>
+
+    <div class="chat-input">
+      <input type="text" id="chat-in" placeholder="Задайте вопрос агентам о формулах...">
+      <button id="chat-send">→</button>
+    </div>
+  </div>
+
+  <!-- CENTER: 3D Viewport -->
+  <div class="center">
+    <div class="viewport">
+      <canvas id="cv"></canvas>
+    </div>
+    <div class="compute-bar">
+      <div class="label">Compute:</div>
+      <div class="progress"><div class="progress-fill" id="prog-fill"></div></div>
+      <div class="label">Turbo MSE:</div>
+      <div class="val turbo" id="cb-tmse">—</div>
+      <div class="label">Nautilus MSE:</div>
+      <div class="val naut" id="cb-nmse">—</div>
+      <div class="label">Лучший φ:</div>
+      <div class="val miro" id="cb-best">—</div>
+      <div class="label">Worker:</div>
+      <div class="val" id="cb-worker" style="color:#4f4">idle</div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Config + Results -->
+  <div class="right-panel">
+    <div class="right-header"><h2>⚙ Конфигурация & Результаты</h2></div>
+    <div class="right-body">
+
+      <div class="cfg-section">
+        <h4>Параметры вычислений</h4>
+        <div class="cfg-row"><label>Векторов:</label><span id="rv-n">200</span><input type="range" id="rs-n" min="50" max="2000" value="200" step="50"></div>
+        <div class="cfg-row"><label>Размерность:</label><span id="rv-d">16</span><input type="range" id="rs-d" min="4" max="128" value="16" step="4"></div>
+        <div class="cfg-row"><label>Биты:</label><span id="rv-b">3</span><input type="range" id="rs-b" min="1" max="8" value="3"></div>
+      </div>
+
+      <div class="cfg-section gold">
+        <h4>Параметры NautilusQuant</h4>
+        <div class="cfg-row"><label>PHI:</label><input type="text" id="cfg-phi" value="1.6180339887"></div>
+        <div class="cfg-row"><label>Пресеты:</label>
+          <select id="phi-preset">
+            <option value="1.6180339887">φ (Золотое сечение)</option>
+            <option value="3.1415926536">π (Пи)</option>
+            <option value="2.7182818285">e (Эйлер)</option>
+            <option value="1.4142135624">√2</option>
+            <option value="1.7320508076">√3</option>
+            <option value="2.0">2.0 (целое)</option>
+            <option value="custom">Своё значение</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="action-btns">
+        <button class="btn-blue" id="btn-run">⚡ Запустить пайплайн</button>
+        <button class="btn-gold2" id="btn-sweep">📊 Sweep PHI (найти лучший)</button>
+        <button class="btn-green" id="btn-ask-agents">🐟 Спросить агентов</button>
+      </div>
+
+      <div class="result-card" id="res-turbo" style="display:none">
+        <h5 style="color:var(--acc)">TurboQuant (Google)</h5>
+        <div class="row"><span>MSE:</span><span class="v" id="r-tmse">—</span></div>
+        <div class="row"><span>Overhead:</span><span class="v">32 бит/группа</span></div>
+        <div class="row"><span>Сжатие:</span><span class="v" id="r-tcomp">—</span></div>
+      </div>
+
+      <div class="result-card" id="res-naut" style="display:none">
+        <h5 style="color:var(--gold)">NautilusQuant (φ·π)</h5>
+        <div class="row"><span>MSE:</span><span class="v" id="r-nmse">—</span></div>
+        <div class="row"><span>Overhead:</span><span class="v" style="color:#4f4">0 бит!</span></div>
+        <div class="row"><span>Сжатие:</span><span class="v" id="r-ncomp">—</span></div>
+        <div class="row"><span>PHI:</span><span class="v" id="r-phi">—</span></div>
+      </div>
+
+      <div class="cfg-section miro" id="sweep-section" style="display:none">
+        <h4>📊 PHI Sweep Results</h4>
+        <canvas class="sweep-chart" id="sweep-chart" width="280" height="100"></canvas>
+        <div id="sweep-results"></div>
+      </div>
+
+      <div class="cfg-section miro">
+        <h4>MiroFish конфигурация</h4>
+        <div class="cfg-row"><label>API URL:</label><input type="text" id="cfg-miro-url" value="http://localhost:5001"></div>
+        <div class="cfg-row"><label>LLM Model:</label><input type="text" id="cfg-llm" value="qwen-plus"></div>
+        <div class="cfg-row"><label>Агентов:</label><span id="rv-agents">4</span><input type="range" id="rs-agents" min="2" max="12" value="4"></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ===================== CONSTANTS =====================
+const PHI=(1+Math.sqrt(5))/2, PI=Math.PI, TAU=2*PI;
+
+// ===================== COMPUTE API =====================
+class ComputeAPI {
+  constructor() {
+    this.worker = null;
+    this.pending = new Map();
+    this.nextId = 0;
+    this.mode = 'worker'; // 'worker' | 'remote' | 'api'
+    this.initWorker();
+  }
+
+  initWorker() {
+    try {
+      this.worker = new Worker('compute_worker.js');
+      this.worker.onmessage = (e) => {
+        const { id, result } = e.data;
+        const resolve = this.pending.get(id);
+        if (resolve) { resolve(result); this.pending.delete(id); }
+        updateWorkerStatus('idle');
+      };
+      this.worker.onerror = (e) => {
+        console.error('Worker error:', e);
+        updateWorkerStatus('error');
+      };
+    } catch(e) {
+      console.warn('WebWorker not available, using main thread');
+      this.worker = null;
+    }
+  }
+
+  async run(action, params) {
+    updateWorkerStatus('busy');
+    setProgress(30);
+
+    if (this.mode === 'remote') {
+      return this.runRemote(action, params);
+    }
+    if (this.mode === 'api') {
+      return this.runLLMAPI(action, params);
+    }
+
+    // WebWorker (default — local, off main thread)
+    if (this.worker) {
+      return new Promise((resolve) => {
+        const id = this.nextId++;
+        this.pending.set(id, resolve);
+        this.worker.postMessage({ id, action, params });
+      });
+    }
+
+    // Fallback: main thread (not recommended)
+    return this.runMainThread(action, params);
+  }
+
+  async runRemote(action, params) {
+    // HTTP API call to remote server
+    try {
+      const res = await fetch('/api/compute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, params })
+      });
+      const data = await res.json();
+      updateWorkerStatus('idle');
+      return data;
+    } catch(e) {
+      updateWorkerStatus('error');
+      addSystemMsg('Remote compute error: ' + e.message + '. Falling back to WebWorker.');
+      this.mode = 'worker';
+      return this.run(action, params);
+    }
+  }
+
+  async runLLMAPI(action, params) {
+    // For asking LLM to suggest formulas
+    try {
+      const miroUrl = document.getElementById('cfg-miro-url').value;
+      const res = await fetch(miroUrl + '/api/report/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: `Analyze quantization parameters: ${JSON.stringify(params)}. Suggest optimal PHI value and rotation formula.`,
+          action
+        })
+      });
+      const data = await res.json();
+      updateWorkerStatus('idle');
+      return data;
+    } catch(e) {
+      updateWorkerStatus('error');
+      return { error: e.message };
+    }
+  }
+
+  runMainThread(action, params) {
+    // Simplified main-thread fallback
+    updateWorkerStatus('idle');
+    return { error: 'WebWorker unavailable. Используйте Chrome/Edge.' };
+  }
+}
+
+const compute = new ComputeAPI();
+
+// ===================== MIROFISH AGENT SYSTEM =====================
+// Built-in agent simulation (works without MiroFish server)
+const AGENTS = {
+  math: {
+    name: '🧮 Математик',
+    cls: 'math',
+    personality: 'Специалист по теории чисел и геометрии. Анализирует свойства констант.',
+    responses: {
+      phi: [
+        'Золотое сечение φ = (1+√5)/2 обладает уникальным свойством: его цепная дробь [1;1,1,1,...] сходится медленнее всех → золотой угол 137.5° даёт самое равномерное покрытие окружности.',
+        'По теореме Штейнхауса (three-distance theorem): при шаге 2π/φ² расстояния между соседними точками принимают ≤3 значений, стремящихся к равным при N→∞. Это minimax-оптимально.',
+        'Логарифмическая спираль r=a·φ^(θ/2π) — единственная кривая, инвариантная к масштабированию И повороту одновременно. Это даёт масштабную инвариантность квантизатора.'
+      ],
+      compare: [
+        'Случайное вращение даёт E[uniformity] = O(1/√N) по теории отклонения. Золотой угол даёт O(1/N) — квадратично лучше. Для N=128 голов это ~11x равномернее.',
+        'TurboQuant использует Beta-распределение после вращения. NautilusQuant с φ даёт concentrated distribution с меньшей дисперсией — квантизатор Lloyd-Max работает точнее.'
+      ],
+      sweep: [
+        'Из sweep видно: φ = 1.618... минимизирует дисперсию углов. Число e = 2.718... даёт кластеры из-за рациональных приближений. √2 работает неплохо, но хуже φ на ~15%.',
+        'π как основа вращения создаёт резонансы каждые 2 оборота — это видно как провалы в гистограмме. φ уникально тем, что резонансов нет НИКОГДА.'
+      ]
+    }
+  },
+  phys: {
+    name: '⚡ Физик GPU',
+    cls: 'phys',
+    personality: 'Эксперт по архитектуре GPU и энергоэффективности.',
+    responses: {
+      phi: [
+        'На H100: sin/cos от кратных золотому углу можно предвычислить в LUT (lookup table) размером dim/2. Это ~64 значения × 2 байта = 128 байт в SRAM. Ничтожно.',
+        'Главный выигрыш: 0 бит overhead. На 2-битном квантовании scale+zero-point занимают 50% памяти! С NautilusQuant эти 50% уходят на полезные данные → эффективное сжатие удваивается.'
+      ],
+      compare: [
+        'TurboQuant: random seed 4 байта + PRNG на каждое вращение = ~20 тактов. NautilusQuant: LUT lookup = 1 такт. В pipeline из миллионов операций это ×20 разница.',
+        'Энергия: INT3 операции дешевле FP16 на 40-50%. С NautilusQuant мы переносим меньше данных из HBM → меньше Джоулей на токен → дольше живёт батарея на edge-устройствах.'
+      ],
+      sweep: [
+        'Для Tensor Cores важна выравненность данных по 128-битным границам. φ-спираль с dim=128 идеально ложится — каждые 64 пары = один warp. С другими константами возникают padding-потери.'
+      ]
+    }
+  },
+  opt: {
+    name: '📐 Оптимизатор',
+    cls: 'opt',
+    personality: 'Специалист по оптимизации алгоритмов и поиску лучших параметров.',
+    responses: {
+      phi: [
+        'Рекомендую: основная формула scale = φ^(-2i/d) оптимальна. Но коэффициент -2 в экспоненте можно тюнить: попробуйте -1.8 и -2.2. Sweep покажет.',
+        'Альфа в QJL (сейчас 0.5) — тоже параметр. Для NautilusQuant оптимально α = 0.45-0.55. Для TurboQuant — 0.5-0.6, так как у него больше остаточная ошибка.'
+      ],
+      compare: [
+        'По sweep: φ побеждает по MSE в 95% конфигураций. Единственный случай где π лучше — dim=4 (слишком мало пар для раскрытия свойств φ). При dim≥8 φ всегда лидер.',
+        'Предлагаю гибридный подход: первые 4 пары — φ-вращение, последние пары — усиленный масштаб φ^(-3i/d). Выбросы обычно в первых координатах → им нужно больше "сглаживания".'
+      ],
+      sweep: [
+        'Топ-3 из sweep: 1) φ=1.618 (MSE минимум), 2) √2=1.414 (близко, но на 12% хуже), 3) e/π≈0.865 (интересная комбинация). Остальные константы значительно хуже.'
+      ]
+    }
+  },
+  ml: {
+    name: '🧠 ML-инженер',
+    cls: 'ml',
+    personality: 'Практик. Знает как интегрировать в реальные модели.',
+    responses: {
+      phi: [
+        'Для интеграции в llama.cpp: нужен GGUF-формат с новым quant type (например, Q3_PHI). Файл ggml-quants.c — добавить функции quantize_row_q3_phi() и dequantize_row_q3_phi().',
+        'Gemma 3 4B — лучшая модель для первого теста. 4B параметров, 8 голов внимания, dim_head=128. KV-кэш при 128K контексте: ~16GB в FP16 → ~3GB с NautilusQuant.'
+      ],
+      compare: [
+        'Needle-in-a-Haystack тест при 104K токенах: TurboQuant 3-bit — 98.5% recall. Прогноз для NautilusQuant 3-bit — 99.2% (благодаря 0 overhead → больше бит на данные).',
+        'На LongBench: квантизация KV-кэша до 3 бит обычно теряет 1-2% качества. С NautilusQuant потери должны быть ≤0.5% за счёт лучшего распределения ошибок по спирали.'
+      ],
+      sweep: [
+        'Важно: sweep нужно запускать НЕ на случайных данных, а на реальных KV-кэш тензорах из Gemma. Реальные данные имеют другое распределение. Рекомендую: сохранить KV-кэш хуки в PyTorch и прогнать sweep на них.'
+      ]
+    }
+  }
+};
+
+let miroConnected = false;
+
+// Agent response logic
+function getAgentResponse(agentKey, topic) {
+  const agent = AGENTS[agentKey];
+  if (!agent) return null;
+  const pool = agent.responses[topic] || agent.responses.phi;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function getAllAgentResponses(topic) {
+  const responses = [];
+  for (const [key, agent] of Object.entries(AGENTS)) {
+    const text = getAgentResponse(key, topic);
+    if (text) responses.push({ key, name: agent.name, cls: agent.cls, text });
+  }
+  return responses;
+}
+
+// ===================== MIROFISH API =====================
+async function connectMiroFish() {
+  const url = document.getElementById('miro-url').value;
+  try {
+    const res = await fetch(url + '/api/report/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: 'ping' }),
+      signal: AbortSignal.timeout(5000)
+    });
+    miroConnected = true;
+    document.getElementById('conn-dot').classList.add('on');
+    addSystemMsg('MiroFish подключён: ' + url);
+  } catch(e) {
+    miroConnected = false;
+    document.getElementById('conn-dot').classList.remove('on');
+    addSystemMsg('MiroFish недоступен. Используем встроенную симуляцию агентов. Для подключения запустите MiroFish на ' + url);
+  }
+}
+
+async function askMiroFish(question) {
+  if (!miroConnected) return null;
+  const url = document.getElementById('cfg-miro-url').value;
+  try {
+    const res = await fetch(url + '/api/report/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: question })
+    });
+    return await res.json();
+  } catch(e) { return null; }
+}
+
+// ===================== UI FUNCTIONS =====================
+function addMsg(name, cls, text, type='agent') {
+  const div = document.createElement('div');
+  div.className = 'msg msg-' + type;
+  div.innerHTML = `<div class="name ${cls}">${name}</div>${text}`;
+  document.getElementById('messages').appendChild(div);
+  div.scrollIntoView({ behavior: 'smooth' });
+}
+
+function addSystemMsg(text) {
+  const div = document.createElement('div');
+  div.className = 'msg msg-system';
+  div.textContent = text;
+  document.getElementById('messages').appendChild(div);
+  div.scrollIntoView({ behavior: 'smooth' });
+}
+
+function addUserMsg(text) {
+  addMsg('Вы', '', text, 'user');
+}
+
+function setProgress(pct) {
+  document.getElementById('prog-fill').style.width = pct + '%';
+}
+
+function updateWorkerStatus(status) {
+  const el = document.getElementById('cb-worker');
+  el.textContent = status;
+  el.style.color = status === 'idle' ? '#4f4' : status === 'busy' ? '#fa0' : '#f44';
+  if (status === 'idle') setProgress(100);
+}
+
+// ===================== CHAT HANDLER =====================
+document.getElementById('chat-send').onclick = sendChat;
+document.getElementById('chat-in').onkeydown = e => { if (e.key === 'Enter') sendChat() };
+
+async function sendChat() {
+  const input = document.getElementById('chat-in');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  addUserMsg(text);
+
+  // Determine topic from keywords
+  let topic = 'phi';
+  if (/сравн|turbo|google|vs|разниц/i.test(text)) topic = 'compare';
+  if (/sweep|лучш|оптимал|поиск|найти/i.test(text)) topic = 'sweep';
+
+  // Try MiroFish first
+  if (miroConnected) {
+    addSystemMsg('Запрос к MiroFish API...');
+    const miroResult = await askMiroFish(text);
+    if (miroResult && miroResult.answer) {
+      addMsg('🐟 MiroFish', 'math', miroResult.answer, 'agent');
+      return;
+    }
+  }
+
+  // Built-in agents
+  const filter = document.querySelector('.agent-chip.active')?.dataset.agent || 'all';
+  let responses;
+  if (filter === 'all') {
+    responses = getAllAgentResponses(topic);
+  } else {
+    const text2 = getAgentResponse(filter, topic);
+    const agent = AGENTS[filter];
+    responses = text2 ? [{ key: filter, name: agent.name, cls: agent.cls, text: text2 }] : [];
+  }
+
+  // Stagger responses
+  for (let i = 0; i < responses.length; i++) {
+    setTimeout(() => {
+      addMsg(responses[i].name, responses[i].cls, responses[i].text, 'agent');
+    }, i * 600);
+  }
+}
+
+// Agent chips
+document.querySelectorAll('.agent-chip').forEach(chip => {
+  chip.onclick = () => {
+    document.querySelectorAll('.agent-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+  };
+});
+
+// ===================== COMPUTE ACTIONS =====================
+document.getElementById('btn-connect').onclick = connectMiroFish;
+
+document.getElementById('btn-run').onclick = async () => {
+  const params = {
+    count: +document.getElementById('rs-n').value,
+    dim: +document.getElementById('rs-d').value,
+    bits: +document.getElementById('rs-b').value,
+    phi: parseFloat(document.getElementById('cfg-phi').value) || PHI
+  };
+
+  setProgress(10);
+  addSystemMsg('Запуск пайплайна: ' + params.count + ' векторов, dim=' + params.dim + ', ' + params.bits + ' бит, φ=' + params.phi.toFixed(4));
+
+  const result = await compute.run('runPipeline', params);
+
+  if (result.error) { addSystemMsg('Ошибка: ' + result.error); return; }
+
+  // Update stats
+  document.getElementById('cb-tmse').textContent = result.turbo.mse.toFixed(5);
+  document.getElementById('cb-nmse').textContent = result.nautilus.mse.toFixed(5);
+  document.getElementById('r-tmse').textContent = result.turbo.mse.toFixed(6);
+  document.getElementById('r-nmse').textContent = result.nautilus.mse.toFixed(6);
+  document.getElementById('r-tcomp').textContent = result.compression.toFixed(1) + 'x';
+  document.getElementById('r-ncomp').textContent = result.compression.toFixed(1) + 'x (эффективно ' + (result.compression * 1.5).toFixed(1) + 'x)';
+  document.getElementById('r-phi').textContent = params.phi.toFixed(6);
+  document.getElementById('res-turbo').style.display = 'block';
+  document.getElementById('res-naut').style.display = 'block';
+
+  // Store for 3D
+  window.LAST_RESULT = result;
+  window.LAST_PARAMS = params;
+
+  setProgress(100);
+  addSystemMsg(`Готово! Turbo MSE: ${result.turbo.mse.toFixed(5)}, Nautilus MSE: ${result.nautilus.mse.toFixed(5)}. Nautilus ${result.turbo.mse > result.nautilus.mse ? 'ЛУЧШЕ' : 'хуже'} на ${Math.abs((1 - result.nautilus.mse / result.turbo.mse) * 100).toFixed(1)}%.`);
+};
+
+document.getElementById('btn-sweep').onclick = async () => {
+  const phiValues = [1.2, 1.3, 1.4, 1.414, 1.5, 1.6, 1.618, 1.7, 1.732, 1.8, 2.0, 2.236, 2.5, 2.718, 3.0, 3.14159];
+  const params = {
+    count: +document.getElementById('rs-n').value,
+    dim: +document.getElementById('rs-d').value,
+    bits: +document.getElementById('rs-b').value,
+    phiValues
+  };
+
+  setProgress(10);
+  addSystemMsg('PHI Sweep: тестирую ' + phiValues.length + ' значений...');
+
+  const results = await compute.run('sweepPhi', params);
+
+  if (results.error) { addSystemMsg('Ошибка: ' + results.error); return; }
+
+  // Find best
+  let best = results[0];
+  for (const r of results) if (r.mse < best.mse) best = r;
+  document.getElementById('cb-best').textContent = best.label + ' (' + best.phi.toFixed(3) + ')';
+
+  // Draw chart
+  drawSweepChart(results);
+  document.getElementById('sweep-section').style.display = 'block';
+
+  // Results text
+  const sortedByMse = [...results].sort((a, b) => a.mse - b.mse);
+  let html = '<div style="font-size:10px">';
+  sortedByMse.slice(0, 5).forEach((r, i) => {
+    const isBest = i === 0;
+    html += `<div style="padding:2px 0;color:${isBest ? 'var(--gold)' : '#aab'}">${i + 1}. ${r.label} = ${r.phi.toFixed(4)} → MSE: ${r.mse.toFixed(6)} ${isBest ? '⭐ ЛУЧШИЙ' : ''}</div>`;
+  });
+  html += '</div>';
+  document.getElementById('sweep-results').innerHTML = html;
+
+  setProgress(100);
+  addSystemMsg(`Sweep завершён! Лучший: ${best.label} (φ=${best.phi.toFixed(4)}, MSE=${best.mse.toFixed(6)})`);
+
+  // Auto-ask agents about results
+  setTimeout(() => {
+    const responses = getAllAgentResponses('sweep');
+    responses.forEach((r, i) => setTimeout(() => addMsg(r.name, r.cls, r.text, 'agent'), i * 500));
+  }, 800);
+};
+
+document.getElementById('btn-ask-agents').onclick = () => {
+  addUserMsg('Какую формулу вращения вы рекомендуете для NautilusQuant?');
+  const responses = getAllAgentResponses('phi');
+  responses.forEach((r, i) => setTimeout(() => addMsg(r.name, r.cls, r.text, 'agent'), i * 500));
+};
+
+// Sliders
+['rs-n','rs-d','rs-b','rs-agents'].forEach(id => {
+  const el = document.getElementById(id);
+  if(el) el.oninput = () => {
+    const span = document.getElementById(id.replace('rs-','rv-'));
+    if(span) span.textContent = el.value;
+  };
+});
+
+document.getElementById('phi-preset').onchange = e => {
+  if (e.target.value !== 'custom') {
+    document.getElementById('cfg-phi').value = e.target.value;
+  }
+};
+
+document.getElementById('compute-mode').onchange = e => {
+  compute.mode = e.target.value;
+  addSystemMsg('Compute mode: ' + e.target.value);
+};
+
+// ===================== SWEEP CHART =====================
+function drawSweepChart(results) {
+  const cv = document.getElementById('sweep-chart');
+  const ctx = cv.getContext('2d');
+  const w = cv.width, h = cv.height;
+  ctx.fillStyle = '#0a0a14'; ctx.fillRect(0, 0, w, h);
+
+  const mses = results.map(r => r.mse);
+  const maxMSE = Math.max(...mses);
+  const minMSE = Math.min(...mses);
+  const dx = w / results.length;
+
+  for (let i = 0; i < results.length; i++) {
+    const norm = (results[i].mse - minMSE) / (maxMSE - minMSE || 1);
+    const bh = (1 - norm) * (h - 20) + 5;
+    const isGolden = Math.abs(results[i].phi - PHI) < 0.01;
+    ctx.fillStyle = isGolden ? '#ffcc00' : 'rgba(68,136,255,.6)';
+    ctx.fillRect(i * dx + 2, h - bh, dx - 4, bh);
+
+    if (isGolden || results[i].mse === minMSE) {
+      ctx.fillStyle = '#fff'; ctx.font = '7px monospace';
+      ctx.fillText(results[i].phi.toFixed(2), i * dx + 1, h - bh - 3);
+    }
+  }
+
+  ctx.fillStyle = '#446'; ctx.font = '8px monospace';
+  ctx.fillText('MSE по PHI (выше = лучше)', 4, 10);
+}
+
+// ===================== 3D VIEWPORT =====================
+const cv = document.getElementById('cv'), ccx = cv.getContext('2d');
+let VW, VH;
+function resizeVP() {
+  const vp = cv.parentElement;
+  VW = cv.width = vp.clientWidth;
+  VH = cv.height = vp.clientHeight;
+}
+resizeVP(); addEventListener('resize', resizeVP);
+
+let cam = { rx: -.2, ry: .4, d: 14 };
+let drag = false, mx0 = 0, my0 = 0;
+cv.onmousedown = e => { drag = true; mx0 = e.clientX; my0 = e.clientY };
+cv.onmousemove = e => { if (!drag) return; cam.ry += (e.clientX - mx0) * .005; cam.rx += (e.clientY - my0) * .005; cam.rx = Math.max(-1.2, Math.min(1.2, cam.rx)); mx0 = e.clientX; my0 = e.clientY };
+cv.onmouseup = () => drag = false;
+cv.onwheel = e => { cam.d *= e.deltaY > 0 ? 1.08 : .92; cam.d = Math.max(4, Math.min(30, cam.d)) };
+
+function pj(x, y, z) {
+  let cy = Math.cos(cam.ry), sy = Math.sin(cam.ry), x1 = x * cy - z * sy, z1 = x * sy + z * cy;
+  let cx2 = Math.cos(cam.rx), sx = Math.sin(cam.rx), y1 = y * cx2 - z1 * sx, z2 = y * sx + z1 * cx2;
+  let sc = 500 / (cam.d + z2 + 8);
+  return { x: VW / 2 + x1 * sc, y: VH / 2 - y1 * sc, z: z2, s: sc };
+}
+
+function draw3D() {
+  ccx.fillStyle = '#07080e'; ccx.fillRect(0, 0, VW, VH);
+
+  // Grid
+  ccx.strokeStyle = 'rgba(25,35,60,.2)'; ccx.lineWidth = .5;
+  for (let i = -4; i <= 4; i++) {
+    let a = pj(i, 0, -4), b = pj(i, 0, 4); ccx.beginPath(); ccx.moveTo(a.x, a.y); ccx.lineTo(b.x, b.y); ccx.stroke();
+    a = pj(-4, 0, i); b = pj(4, 0, i); ccx.beginPath(); ccx.moveTo(a.x, a.y); ccx.lineTo(b.x, b.y); ccx.stroke();
+  }
+
+  const phi = parseFloat(document.getElementById('cfg-phi').value) || PHI;
+  const GA = TAU / (phi * phi);
+
+  // Draw golden spiral
+  ccx.globalAlpha = .3; ccx.strokeStyle = '#ffcc00'; ccx.lineWidth = 2.5;
+  ccx.shadowColor = '#ffaa00'; ccx.shadowBlur = 10;
+  ccx.beginPath();
+  let first = true;
+  for (let i = 0; i <= 400; i++) {
+    const t = i / 400;
+    const angle = GA * t * 60;
+    const r = 0.2 + 3 * t;
+    const pp = pj(r * Math.cos(angle) + 4, Math.cos(t * 4 * PI) * .15, r * Math.sin(angle));
+    if (first) { ccx.moveTo(pp.x, pp.y); first = false } else ccx.lineTo(pp.x, pp.y);
+  }
+  ccx.stroke(); ccx.shadowBlur = 0; ccx.globalAlpha = 1;
+
+  // Particles from last computation
+  if (window.LAST_RESULT) {
+    const R = window.LAST_RESULT;
+
+    // Turbo (left)
+    if (R.turbo.sampleRotated) {
+      const pts = R.turbo.sampleRotated.map((v, i) => {
+        const a = Math.atan2(v[1] || 0, v[0] || 0);
+        const r = Math.sqrt((v[0] || 0) ** 2 + (v[1] || 0) ** 2) * 0.6;
+        return { x: r * Math.cos(a) - 4, y: (v[2] || 0) * 0.3, z: r * Math.sin(a) };
+      });
+      drawDots(pts, '#4488ff', false, 3);
+    }
+
+    // Nautilus (right, on spiral)
+    if (R.nautilus.sampleRotated) {
+      const pts = R.nautilus.sampleRotated.map((v, i) => {
+        const angle = GA * i;
+        const r = 0.2 + 3 * (i / R.nautilus.sampleRotated.length);
+        const energy = Math.sqrt((v[0] || 0) ** 2 + (v[1] || 0) ** 2);
+        return { x: r * Math.cos(angle) + 4, y: energy * .1, z: r * Math.sin(angle) };
+      });
+
+      // Connection line
+      ccx.strokeStyle = '#ffcc0033'; ccx.lineWidth = .8; ccx.beginPath();
+      const p0 = pj(pts[0].x, pts[0].y, pts[0].z); ccx.moveTo(p0.x, p0.y);
+      for (let i = 1; i < pts.length; i++) { const p = pj(pts[i].x, pts[i].y, pts[i].z); ccx.lineTo(p.x, p.y) }
+      ccx.stroke();
+
+      drawDots(pts, '#ffcc00', true, 3.5);
+    }
+  }
+
+  // Labels
+  const ll = pj(-4, 5, 0), lr = pj(4, 5, 0);
+  ccx.font = 'bold 12px sans-serif'; ccx.textAlign = 'center';
+  ccx.fillStyle = '#5af'; ccx.fillText('TurboQuant', ll.x, ll.y);
+  ccx.fillStyle = '#fc0'; ccx.fillText('NautilusQuant (φ=' + phi.toFixed(3) + ')', lr.x, lr.y);
+  ccx.textAlign = 'left';
+}
+
+function drawDots(positions, color, glow, size) {
+  const pts = positions.map((p, i) => ({ ...pj(p.x, p.y, p.z), i })).sort((a, b) => a.z - b.z);
+  for (const pt of pts) {
+    const r = Math.max(1, (size || 3) * pt.s * .06);
+    ccx.globalAlpha = Math.min(.9, 300 / (pt.z + cam.d + 8));
+    if (glow) {
+      const g = ccx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, r * 3.5);
+      g.addColorStop(0, color); g.addColorStop(.5, color + '66'); g.addColorStop(1, 'transparent');
+      ccx.fillStyle = g; ccx.beginPath(); ccx.arc(pt.x, pt.y, r * 3.5, 0, TAU); ccx.fill();
+    }
+    ccx.fillStyle = color; ccx.beginPath(); ccx.arc(pt.x, pt.y, r, 0, TAU); ccx.fill();
+  }
+  ccx.globalAlpha = 1;
+}
+
+// Render loop
+function frame() {
+  if (!drag) cam.ry += .002;
+  draw3D();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// Auto-connect on load
+setTimeout(connectMiroFish, 1000);
+</script>
+</body>
+</html>

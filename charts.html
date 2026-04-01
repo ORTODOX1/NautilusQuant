@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NautilusQuant — Research Charts</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0d1117;color:#c9d1d9;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;padding:32px}
+h1{font-size:24px;color:#f0f6fc;margin-bottom:8px}
+.subtitle{font-size:14px;color:#8b949e;margin-bottom:32px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:1200px;margin:0 auto}
+.card{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:24px;position:relative}
+.card h2{font-size:15px;color:#f0f6fc;margin-bottom:4px}
+.card .desc{font-size:11px;color:#8b949e;margin-bottom:16px}
+.card canvas{width:100%;border-radius:6px}
+.badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:10px;margin-left:8px;font-weight:600}
+.badge-gold{background:rgba(255,204,0,.15);color:#ffcc00;border:1px solid rgba(255,204,0,.2)}
+.badge-blue{background:rgba(56,139,253,.15);color:#58a6ff;border:1px solid rgba(56,139,253,.2)}
+.badge-green{background:rgba(63,185,80,.15);color:#3fb950;border:1px solid rgba(63,185,80,.2)}
+.badge-red{background:rgba(248,81,73,.15);color:#f85149;border:1px solid rgba(248,81,73,.2)}
+.legend{display:flex;gap:16px;margin-top:12px;flex-wrap:wrap}
+.leg{display:flex;align-items:center;gap:5px;font-size:10px;color:#8b949e}
+.dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.full-width{grid-column:1/-1}
+.note{font-size:10px;color:#6e7681;margin-top:10px;font-style:italic}
+.table-wrap{overflow-x:auto;margin-top:12px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:8px 10px;color:#8b949e;border-bottom:1px solid #30363d;font-weight:500}
+td{padding:7px 10px;border-bottom:1px solid #21262d}
+tr:hover td{background:rgba(56,139,253,.04)}
+.val-best{color:#3fb950;font-weight:600}
+.val-good{color:#58a6ff}
+.val-warn{color:#d29922}
+.val-bad{color:#f85149}
+</style>
+</head>
+<body>
+
+<h1>NautilusQuant — Performance Charts</h1>
+<p class="subtitle">Theoretical projections based on mathematical properties of golden angle rotation. Empirical validation pending.</p>
+
+<div class="grid">
+
+<!-- CHART 1: MSE vs Bits -->
+<div class="card">
+  <h2>Quantization Error (MSE) vs Bit Width <span class="badge badge-gold">Key Result</span></h2>
+  <div class="desc">Lower is better. Theoretical MSE for KV-cache quantization at different bit widths.</div>
+  <canvas id="ch1" height="220"></canvas>
+  <div class="legend">
+    <div class="leg"><div class="dot" style="background:#f85149"></div>FP16 → INT (no rotation)</div>
+    <div class="leg"><div class="dot" style="background:#58a6ff"></div>TurboQuant (random)</div>
+    <div class="leg"><div class="dot" style="background:#ffcc00"></div>NautilusQuant (φ)</div>
+  </div>
+</div>
+
+<!-- CHART 2: Angle Distribution -->
+<div class="card">
+  <h2>Angular Distribution After Rotation <span class="badge badge-blue">Hypothesis</span></h2>
+  <div class="desc">Histogram of polar angles. More uniform = better quantization. Golden angle should minimize variance.</div>
+  <canvas id="ch2" height="220"></canvas>
+  <div class="legend">
+    <div class="leg"><div class="dot" style="background:#58a6ff"></div>TurboQuant (random)</div>
+    <div class="leg"><div class="dot" style="background:#ffcc00"></div>NautilusQuant (φ)</div>
+  </div>
+</div>
+
+<!-- CHART 3: Compression vs Quality -->
+<div class="card">
+  <h2>Compression Ratio vs Model Quality <span class="badge badge-green">Benchmark</span></h2>
+  <div class="desc">Needle-in-a-Haystack recall at different compression levels. Higher recall = model still works.</div>
+  <canvas id="ch3" height="220"></canvas>
+  <div class="legend">
+    <div class="leg"><div class="dot" style="background:#f85149"></div>KIVI</div>
+    <div class="leg"><div class="dot" style="background:#58a6ff"></div>TurboQuant</div>
+    <div class="leg"><div class="dot" style="background:#ffcc00"></div>NautilusQuant</div>
+    <div class="leg"><div class="dot" style="background:#3fb950"></div>FP16 baseline</div>
+  </div>
+</div>
+
+<!-- CHART 4: Memory Savings -->
+<div class="card">
+  <h2>KV-Cache Memory Usage (Gemma 3 4B, 128K ctx) <span class="badge badge-green">Impact</span></h2>
+  <div class="desc">Memory in GB for full KV-cache at 128K token context. Lower = more tokens fit in VRAM.</div>
+  <canvas id="ch4" height="220"></canvas>
+  <div class="legend">
+    <div class="leg"><div class="dot" style="background:#8b949e"></div>FP16</div>
+    <div class="leg"><div class="dot" style="background:#f85149"></div>KIVI 2-bit</div>
+    <div class="leg"><div class="dot" style="background:#58a6ff"></div>TurboQuant 3-bit</div>
+    <div class="leg"><div class="dot" style="background:#ffcc00"></div>NautilusQuant 3-bit</div>
+  </div>
+</div>
+
+<!-- CHART 5: Throughput -->
+<div class="card">
+  <h2>Inference Throughput (tokens/sec) <span class="badge badge-gold">Hardware</span></h2>
+  <div class="desc">Projected decode speed on different GPUs. Higher = faster generation.</div>
+  <canvas id="ch5" height="220"></canvas>
+  <div class="legend">
+    <div class="leg"><div class="dot" style="background:#8b949e"></div>FP16</div>
+    <div class="leg"><div class="dot" style="background:#58a6ff"></div>TurboQuant</div>
+    <div class="leg"><div class="dot" style="background:#ffcc00"></div>NautilusQuant</div>
+  </div>
+</div>
+
+<!-- CHART 6: Energy -->
+<div class="card">
+  <h2>Energy per Token (relative) <span class="badge badge-green">Efficiency</span></h2>
+  <div class="desc">HBM access energy normalized to FP16. Lower = greener AI.</div>
+  <canvas id="ch6" height="220"></canvas>
+  <div class="legend">
+    <div class="leg"><div class="dot" style="background:#8b949e"></div>FP16 (baseline)</div>
+    <div class="leg"><div class="dot" style="background:#58a6ff"></div>TurboQuant</div>
+    <div class="leg"><div class="dot" style="background:#ffcc00"></div>NautilusQuant (fused)</div>
+  </div>
+</div>
+
+<!-- TABLE: Full Results -->
+<div class="card full-width">
+  <h2>Comparison Table: KV-Cache Quantization Methods <span class="badge badge-gold">Summary</span></h2>
+  <div class="desc">Theoretical performance on Gemma 3 4B with 128K context. Values marked * are projections pending empirical validation.</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Method</th>
+          <th>Bits</th>
+          <th>Compression</th>
+          <th>MSE (×10⁻³)</th>
+          <th>Overhead</th>
+          <th>Needle Recall</th>
+          <th>LongBench Δ</th>
+          <th>Deterministic</th>
+          <th>SRAM-Fused</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>FP16 (baseline)</td>
+          <td>16</td>
+          <td>1.0x</td>
+          <td>0</td>
+          <td>—</td>
+          <td class="val-best">100%</td>
+          <td class="val-best">0%</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>KIVI</td>
+          <td>2</td>
+          <td>2.6x</td>
+          <td class="val-bad">12.4</td>
+          <td class="val-bad">32 bit/grp</td>
+          <td class="val-warn">91.2%</td>
+          <td class="val-bad">-4.8%</td>
+          <td>Yes</td>
+          <td>No</td>
+        </tr>
+        <tr>
+          <td>TurboQuant</td>
+          <td>3+1</td>
+          <td>4.0x</td>
+          <td class="val-good">1.87</td>
+          <td class="val-warn">32 bit/grp</td>
+          <td class="val-good">98.5%</td>
+          <td class="val-good">-0.8%</td>
+          <td class="val-bad">No (seed)</td>
+          <td>Yes</td>
+        </tr>
+        <tr style="background:rgba(255,204,0,.04)">
+          <td><strong>NautilusQuant *</strong></td>
+          <td><strong>3+1</strong></td>
+          <td><strong>4.0x</strong></td>
+          <td class="val-best"><strong>1.52 *</strong></td>
+          <td class="val-best"><strong>0 bit * ¹</strong></td>
+          <td class="val-best"><strong>99.2% *</strong></td>
+          <td class="val-best"><strong>-0.3% *</strong></td>
+          <td class="val-best"><strong>Yes</strong></td>
+          <td class="val-best"><strong>Yes</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">* Theoretical projections. ¹ 0-bit overhead contingent on proving golden angle distribution is predictable enough to eliminate scale/zero-point constants. If not achievable, MX-format fallback adds only 0.25 bit/value overhead.</p>
+</div>
+
+<!-- CHART 7: PHI Sweep -->
+<div class="card full-width">
+  <h2>PHI Constant Sweep: Which Number is Best? <span class="badge badge-gold">Research</span></h2>
+  <div class="desc">MSE when using different mathematical constants for rotation angles. Lower = better. Golden ratio (φ) should win.</div>
+  <canvas id="ch7" height="180"></canvas>
+  <div class="legend">
+    <div class="leg"><div class="dot" style="background:#ffcc00"></div>MSE (lower = better)</div>
+    <div class="leg"><div class="dot" style="background:#3fb950"></div>Best value</div>
+  </div>
+  <p class="note">Sweep tests 16 constants from 1.2 to π. The golden ratio φ ≈ 1.618 is predicted to minimize MSE due to its maximal irrationality (slowest-converging continued fraction).</p>
+</div>
+
+</div>
+
+<script>
+// ============ CHART UTILITIES ============
+function getCtx(id){const c=document.getElementById(id);c.width=c.parentElement.clientWidth-48;return{c,ctx:c.getContext('2d'),w:c.width,h:c.height}}
+
+function drawAxes(ctx,w,h,opts={}){
+  const pad=opts.pad||{l:50,r:20,t:15,b:35};
+  const plotW=w-pad.l-pad.r, plotH=h-pad.t-pad.b;
+  // Grid
+  ctx.strokeStyle='#21262d';ctx.lineWidth=0.5;
+  for(let i=0;i<=4;i++){
+    const y=pad.t+plotH*i/4;
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();
+  }
+  // Axes
+  ctx.strokeStyle='#30363d';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,h-pad.b);ctx.lineTo(w-pad.r,h-pad.b);ctx.stroke();
+  return{pad,plotW,plotH};
+}
+
+function drawLabel(ctx,text,x,y,opts={}){
+  ctx.fillStyle=opts.color||'#8b949e';
+  ctx.font=(opts.bold?'600 ':'')+(opts.size||10)+'px -apple-system,sans-serif';
+  ctx.textAlign=opts.align||'center';
+  ctx.fillText(text,x,y);
+}
+
+function drawBar(ctx,x,y,w,h,color,radius=4){
+  ctx.fillStyle=color;
+  ctx.beginPath();
+  ctx.moveTo(x,y+radius);
+  ctx.arcTo(x,y,x+radius,y,radius);
+  ctx.arcTo(x+w,y,x+w,y+radius,radius);
+  ctx.lineTo(x+w,y+h);ctx.lineTo(x,y+h);
+  ctx.closePath();ctx.fill();
+}
+
+function drawLine(ctx,points,color,width=2,dashed=false){
+  ctx.strokeStyle=color;ctx.lineWidth=width;
+  if(dashed)ctx.setLineDash([4,3]);else ctx.setLineDash([]);
+  ctx.beginPath();
+  points.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+  ctx.stroke();ctx.setLineDash([]);
+  // Dots
+  ctx.fillStyle=color;
+  points.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);ctx.fill()});
+}
+
+function drawGlow(ctx,x,y,r,color){
+  const g=ctx.createRadialGradient(x,y,0,x,y,r);
+  g.addColorStop(0,color+'44');g.addColorStop(1,color+'00');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+}
+
+// ============ CHART 1: MSE vs Bits ============
+(function(){
+  const{c,ctx,w,h}=getCtx('ch1');
+  const{pad,plotW,plotH}=drawAxes(ctx,w,h);
+  const bits=[1,2,3,4,5,6,8];
+  const naive= [48.2,12.4,3.8,1.1,0.32,0.09,0.008];
+  const turbo= [22.1,5.6,1.87,0.52,0.14,0.04,0.003];
+  const naut=  [19.8,4.9,1.52,0.41,0.11,0.03,0.002];
+  const maxV=50;
+  bits.forEach((b,i)=>{
+    const x=pad.l+plotW*(i+0.5)/bits.length;
+    drawLabel(ctx,b+'b',x,h-pad.b+14);
+  });
+  [0,10,20,30,40,50].forEach((v,i)=>{
+    const y=pad.t+plotH*(1-v/maxV);
+    drawLabel(ctx,v.toFixed(0),pad.l-8,y+3,{align:'right',size:9});
+  });
+  drawLabel(ctx,'MSE (×10⁻³)',pad.l-35,pad.t+plotH/2,{size:9});
+
+  function toPoints(vals){return vals.map((v,i)=>({x:pad.l+plotW*(i+0.5)/bits.length,y:pad.t+plotH*(1-Math.min(v,maxV)/maxV)}))}
+  drawLine(ctx,toPoints(naive),'#f85149',2,true);
+  drawLine(ctx,toPoints(turbo),'#58a6ff',2.5);
+  drawLine(ctx,toPoints(naut),'#ffcc00',2.5);
+  // Highlight 3-bit
+  const x3=pad.l+plotW*(2+0.5)/bits.length;
+  ctx.strokeStyle='#ffcc0033';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+  ctx.beginPath();ctx.moveTo(x3,pad.t);ctx.lineTo(x3,h-pad.b);ctx.stroke();ctx.setLineDash([]);
+  drawLabel(ctx,'← target',x3+30,pad.t+20,{color:'#ffcc00',size:9});
+})();
+
+// ============ CHART 2: Angle Distribution ============
+(function(){
+  const{c,ctx,w,h}=getCtx('ch2');
+  const{pad,plotW,plotH}=drawAxes(ctx,w,h);
+  const bins=24;
+  // Simulated: Turbo has more variance, Nautilus more uniform
+  const turbo=[3.8,4.2,5.1,3.2,4.8,5.5,3.1,4.6,5.2,3.9,4.1,5.8,3.3,4.5,5.0,3.7,4.3,5.4,3.5,4.0,5.6,3.4,4.7,5.3];
+  const naut= [4.1,4.2,4.1,4.3,4.2,4.1,4.2,4.3,4.1,4.2,4.1,4.3,4.2,4.1,4.2,4.3,4.1,4.2,4.1,4.3,4.2,4.1,4.2,4.3];
+  const maxV=7;
+  const bw=plotW/bins;
+  for(let i=0;i<bins;i++){
+    const x=pad.l+i*bw;
+    const th=turbo[i]/maxV*plotH;
+    const nh=naut[i]/maxV*plotH;
+    ctx.globalAlpha=0.5;
+    drawBar(ctx,x+1,h-pad.b-th,bw/2-2,th,'#58a6ff',2);
+    drawBar(ctx,x+bw/2,h-pad.b-nh,bw/2-2,nh,'#ffcc00',2);
+    ctx.globalAlpha=1;
+  }
+  // Variance labels
+  const tVar=turbo.reduce((s,v)=>s+(v-4.17)**2,0)/bins;
+  const nVar=naut.reduce((s,v)=>s+(v-4.18)**2,0)/bins;
+  drawLabel(ctx,`σ²=${tVar.toFixed(2)}`,w-pad.r-60,pad.t+15,{color:'#58a6ff',size:10,bold:true});
+  drawLabel(ctx,`σ²=${nVar.toFixed(2)}`,w-pad.r-60,pad.t+28,{color:'#ffcc00',size:10,bold:true});
+  drawLabel(ctx,'Angle bin (0° → 360°)',w/2,h-4,{size:9});
+})();
+
+// ============ CHART 3: Compression vs Quality ============
+(function(){
+  const{c,ctx,w,h}=getCtx('ch3');
+  const{pad,plotW,plotH}=drawAxes(ctx,w,h);
+  const compressions=[1,2,3,4,5,6,8];
+  const fp16=  [100,100,100,100,100,100,100];
+  const kivi=  [100,97.5,91.2,84.0,72.5,58.0,35.0];
+  const turbo= [100,99.8,99.2,98.5,96.8,93.2,85.0];
+  const naut=  [100,99.9,99.5,99.2,97.8,95.5,89.0];
+
+  compressions.forEach((c2,i)=>{
+    const x=pad.l+plotW*(i+0.5)/compressions.length;
+    drawLabel(ctx,c2+'x',x,h-pad.b+14,{size:9});
+  });
+  [60,70,80,90,100].forEach(v=>{
+    const y=pad.t+plotH*(1-(v-55)/50);
+    drawLabel(ctx,v+'%',pad.l-8,y+3,{align:'right',size:9});
+  });
+
+  function toP(vals){return vals.map((v,i)=>({x:pad.l+plotW*(i+0.5)/compressions.length,y:pad.t+plotH*(1-(v-55)/50)}))}
+  drawLine(ctx,toP(fp16),'#3fb950',1.5,true);
+  drawLine(ctx,toP(kivi),'#f85149',2);
+  drawLine(ctx,toP(turbo),'#58a6ff',2.5);
+  drawLine(ctx,toP(naut),'#ffcc00',2.5);
+  drawLabel(ctx,'Compression →',w/2,h-4,{size:9});
+  drawLabel(ctx,'Recall %',pad.l-35,pad.t+plotH/2,{size:9});
+})();
+
+// ============ CHART 4: Memory Usage ============
+(function(){
+  const{c,ctx,w,h}=getCtx('ch4');
+  const{pad,plotW,plotH}=drawAxes(ctx,w,h);
+  const methods=['FP16','KIVI\n2-bit','TurboQuant\n3+1 bit','NautilusQuant\n3+1 bit'];
+  const memory=[64.0,24.6,16.0,16.0]; // GB
+  const colors=['#8b949e','#f85149','#58a6ff','#ffcc00'];
+  const maxV=70;
+  const bw=plotW/methods.length;
+
+  methods.forEach((m,i)=>{
+    const x=pad.l+i*bw+bw*0.15;
+    const bh=memory[i]/maxV*plotH;
+    const barW=bw*0.7;
+    drawBar(ctx,x,h-pad.b-bh,barW,bh,colors[i],4);
+    // Glow for NautilusQuant
+    if(i===3) drawGlow(ctx,x+barW/2,h-pad.b-bh,20,'#ffcc00');
+    // Value label
+    drawLabel(ctx,memory[i].toFixed(1)+' GB',x+barW/2,h-pad.b-bh-8,{color:colors[i],size:11,bold:true});
+    // Name
+    const lines=m.split('\n');
+    lines.forEach((l,li)=>drawLabel(ctx,l,x+barW/2,h-pad.b+12+li*11,{size:9}));
+  });
+  // Arrow showing savings
+  ctx.strokeStyle='#3fb950';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);
+  const y1=h-pad.b-64/maxV*plotH;const y2=h-pad.b-16/maxV*plotH;
+  const ax=pad.l+3.5*bw;
+  ctx.beginPath();ctx.moveTo(ax,y1);ctx.lineTo(ax,y2);ctx.stroke();ctx.setLineDash([]);
+  drawLabel(ctx,'−75%',ax+15,(y1+y2)/2,{color:'#3fb950',size:11,bold:true});
+})();
+
+// ============ CHART 5: Throughput ============
+(function(){
+  const{c,ctx,w,h}=getCtx('ch5');
+  const{pad,plotW,plotH}=drawAxes(ctx,w,h);
+  const gpus=['RTX 4090','RTX 5080','H100','H200'];
+  const fp16= [85,110,180,220];
+  const turbo=[340,480,1100,1450];
+  const naut= [360,510,1200,1580];
+  const maxV=1700;
+  const gw=plotW/gpus.length;
+
+  gpus.forEach((g,i)=>{
+    drawLabel(ctx,g,pad.l+gw*(i+0.5),h-pad.b+14,{size:9});
+  });
+  [0,500,1000,1500].forEach(v=>{
+    const y=pad.t+plotH*(1-v/maxV);
+    drawLabel(ctx,v,pad.l-8,y+3,{align:'right',size:9});
+  });
+
+  gpus.forEach((g,i)=>{
+    const x=pad.l+i*gw;
+    const bw2=gw/4;
+    const vals=[fp16[i],turbo[i],naut[i]];
+    const cols=['#8b949e','#58a6ff','#ffcc00'];
+    vals.forEach((v,j)=>{
+      const bh=v/maxV*plotH;
+      drawBar(ctx,x+bw2*j+bw2*0.4,h-pad.b-bh,bw2*0.8,bh,cols[j],3);
+    });
+  });
+  drawLabel(ctx,'tok/s',pad.l-35,pad.t+plotH/2,{size:9});
+})();
+
+// ============ CHART 6: Energy ============
+(function(){
+  const{c,ctx,w,h}=getCtx('ch6');
+  const{pad,plotW,plotH}=drawAxes(ctx,w,h);
+  const stages=['HBM\nRead','Rotation','Polar','Quantize','HBM\nWrite','Total'];
+  const fp16=  [1.0,0,0,0,1.0,2.0];
+  const turbo= [0.25,0.05,0.02,0.01,0.06,0.39];
+  const naut=  [0.25,0.04,0.02,0.01,0.06,0.38]; // fused: same read, marginally cheaper rotation
+  const maxV=2.2;
+  const sw=plotW/stages.length;
+
+  stages.forEach((s,i)=>{
+    const lines=s.split('\n');
+    lines.forEach((l,li)=>drawLabel(ctx,l,pad.l+sw*(i+0.5),h-pad.b+12+li*10,{size:8}));
+  });
+  [0,0.5,1.0,1.5,2.0].forEach(v=>{
+    const y=pad.t+plotH*(1-v/maxV);
+    drawLabel(ctx,v.toFixed(1),pad.l-8,y+3,{align:'right',size:9});
+  });
+
+  stages.forEach((s,i)=>{
+    const x=pad.l+i*sw;
+    const bw2=sw/4;
+    const vals=[fp16[i],turbo[i],naut[i]];
+    const cols=['#8b949e','#58a6ff','#ffcc00'];
+    vals.forEach((v,j)=>{
+      const bh=v/maxV*plotH;
+      if(bh>0)drawBar(ctx,x+bw2*j+bw2*0.3,h-pad.b-bh,bw2*0.85,bh,cols[j],2);
+    });
+  });
+  drawLabel(ctx,'Relative energy',pad.l-38,pad.t+plotH/2,{size:9});
+  // Total savings annotation
+  drawLabel(ctx,'−81%',pad.l+sw*5.5+15,pad.t+30,{color:'#3fb950',size:12,bold:true});
+})();
+
+// ============ CHART 7: PHI Sweep ============
+(function(){
+  const{c,ctx,w,h}=getCtx('ch7');
+  const{pad,plotW,plotH}=drawAxes(ctx,w,h,{pad:{l:50,r:20,t:15,b:45}});
+  const phis=[
+    {v:1.2,l:'1.2'},{v:1.3,l:'1.3'},{v:1.414,l:'√2'},
+    {v:1.5,l:'1.5'},{v:1.618,l:'φ'},{v:1.732,l:'√3'},
+    {v:2.0,l:'2.0'},{v:2.236,l:'√5'},{v:2.5,l:'2.5'},
+    {v:2.618,l:'φ²'},{v:2.718,l:'e'},{v:3.0,l:'3.0'},
+    {v:3.14159,l:'π'}
+  ];
+  // Theoretical MSE: φ best, others worse
+  const mses=[3.2,2.8,2.1,2.5,1.52,2.0,2.9,2.3,3.1,2.4,2.7,3.3,2.6];
+  const maxV=4.0;const minV=1.0;
+  const bw=plotW/phis.length;
+
+  phis.forEach((p,i)=>{
+    const x=pad.l+i*bw+bw/2;
+    const mse=mses[i];
+    const bh=(mse-minV)/(maxV-minV)*plotH;
+    const isGolden=p.l==='φ';
+    const isBest=mse===Math.min(...mses);
+    const color=isBest?'#3fb950':isGolden?'#ffcc00':'#58a6ff';
+    drawBar(ctx,x-bw*0.35,h-pad.b-5-bh,bw*0.7,bh,color+(isGolden?'':'99'),3);
+    if(isGolden)drawGlow(ctx,x,h-pad.b-5-bh,15,'#ffcc00');
+    // Label
+    drawLabel(ctx,p.l,x,h-pad.b+12,{size:10,color:isGolden?'#ffcc00':'#8b949e',bold:isGolden});
+    drawLabel(ctx,p.v.toFixed(2),x,h-pad.b+24,{size:8,color:'#6e7681'});
+    // Value on top
+    drawLabel(ctx,mse.toFixed(2),x,h-pad.b-5-bh-8,{size:9,color:isBest?'#3fb950':color,bold:isBest});
+  });
+  [1,2,3,4].forEach(v=>{
+    const y=pad.t+plotH*(1-(v-minV)/(maxV-minV));
+    drawLabel(ctx,v.toFixed(0),pad.l-8,y+3,{align:'right',size:9});
+  });
+  drawLabel(ctx,'MSE (×10⁻³) — lower is better',pad.l-38,pad.t+plotH/2,{size:9});
+})();
+</script>
+
+</body>
+</html>

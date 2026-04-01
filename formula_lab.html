@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Formula Lab — TurboQuant vs NautilusQuant</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#07080e;--panel:#0c0d18;--border:#1a2040;--accent:#4488ff;--gold:#ffcc00;--text:#c8cdd8;--dim:#667}
+body{background:var(--bg);color:var(--text);font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:12px;display:flex;height:100vh;overflow:hidden}
+
+/* ===== LEFT: Formula Editor ===== */
+.editor{width:480px;min-width:400px;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.editor-header{padding:12px 16px;border-bottom:1px solid var(--border);background:var(--panel)}
+.editor-header h1{font-size:15px;color:var(--accent);margin-bottom:4px}
+.editor-header p{font-size:10px;color:var(--dim)}
+
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--panel)}
+.tab{padding:8px 16px;cursor:pointer;font-size:11px;color:var(--dim);border-bottom:2px solid transparent;transition:.2s}
+.tab:hover{color:#fff}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab.gold.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+.formula-sections{flex:1;overflow-y:auto;padding:0}
+.section{display:none}
+.section.active{display:block}
+
+.formula-block{border-bottom:1px solid var(--border);padding:12px 16px}
+.formula-block h3{font-size:12px;color:var(--accent);margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
+.formula-block h3 .tag{font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(68,136,255,.15);color:var(--accent)}
+.formula-block.gold h3{color:var(--gold)}
+.formula-block.gold h3 .tag{background:rgba(255,204,0,.12);color:var(--gold)}
+.formula-block .math{font-size:11px;color:#aab;margin:4px 0;padding:6px 10px;background:rgba(255,255,255,.03);border-radius:6px;border:1px solid var(--border)}
+.formula-block .desc{font-size:10px;color:var(--dim);line-height:1.4;margin-bottom:6px}
+
+.code-area{
+  width:100%;min-height:60px;max-height:200px;resize:vertical;
+  background:#0a0b14;color:#dde;border:1px solid var(--border);border-radius:6px;
+  padding:8px 10px;font-family:inherit;font-size:11px;line-height:1.5;
+  outline:none;tab-size:2;
+}
+.code-area:focus{border-color:var(--accent);box-shadow:0 0 8px rgba(68,136,255,.15)}
+.code-area.gold:focus{border-color:var(--gold);box-shadow:0 0 8px rgba(255,204,0,.15)}
+.code-area.error{border-color:#f44;box-shadow:0 0 8px rgba(255,60,60,.2)}
+
+.err-msg{color:#f66;font-size:10px;margin-top:3px;display:none}
+.err-msg.visible{display:block}
+
+.apply-bar{padding:10px 16px;border-top:1px solid var(--border);background:var(--panel);display:flex;gap:8px;align-items:center}
+button{
+  padding:6px 14px;border:none;border-radius:6px;cursor:pointer;font-size:11px;font-family:inherit;
+  transition:.15s;
+}
+.btn-primary{background:linear-gradient(135deg,#2244aa,#3366cc);color:#fff}
+.btn-primary:hover{filter:brightness(1.3)}
+.btn-gold{background:linear-gradient(135deg,#aa8800,#cc9900);color:#fff}
+.btn-gold:hover{filter:brightness(1.3)}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--dim)}
+.btn-outline:hover{border-color:var(--accent);color:#fff}
+
+/* ===== CENTER: 3D Viewport ===== */
+.viewport{flex:1;position:relative;overflow:hidden}
+canvas{display:block;width:100%;height:100%}
+
+.vp-overlay{position:absolute;top:12px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:10}
+.mode-btn{padding:5px 12px;border-radius:6px;font-size:10px;cursor:pointer;transition:.2s}
+.mode-btn{background:rgba(20,20,40,.8);border:1px solid var(--border);color:var(--dim)}
+.mode-btn:hover{border-color:var(--accent);color:#fff}
+.mode-btn.active{background:rgba(68,136,255,.15);border-color:var(--accent);color:var(--accent)}
+.mode-btn.active.gold{background:rgba(255,204,0,.12);border-color:var(--gold);color:var(--gold)}
+
+.vp-stats{
+  position:absolute;bottom:12px;left:50%;transform:translateX(-50%);
+  background:rgba(10,10,20,.9);border:1px solid var(--border);border-radius:10px;
+  padding:8px 20px;display:flex;gap:20px;z-index:10;
+}
+.vstat{text-align:center}
+.vstat-v{font-size:16px;font-weight:bold;color:var(--accent)}
+.vstat-l{font-size:8px;color:var(--dim)}
+
+.vp-info{
+  position:absolute;top:12px;right:12px;
+  background:rgba(10,10,20,.9);border:1px solid var(--border);border-radius:10px;
+  padding:10px 14px;max-width:220px;z-index:10;
+}
+.vp-info h3{font-size:12px;color:var(--accent);margin-bottom:4px}
+.vp-info p{font-size:10px;color:var(--dim);line-height:1.4}
+
+/* ===== RIGHT: Data Inspector ===== */
+.inspector{width:280px;min-width:240px;border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.inspector-header{padding:10px 14px;border-bottom:1px solid var(--border);background:var(--panel)}
+.inspector-header h2{font-size:13px;color:var(--text)}
+.insp-body{flex:1;overflow-y:auto;padding:10px 14px}
+
+.data-table{width:100%;border-collapse:collapse;font-size:10px}
+.data-table th{text-align:left;color:var(--dim);padding:3px 4px;border-bottom:1px solid var(--border);font-weight:normal}
+.data-table td{padding:3px 4px;border-bottom:1px solid rgba(255,255,255,.03);color:#aab}
+.data-table td.num{font-variant-numeric:tabular-nums;text-align:right}
+.data-table tr:hover td{background:rgba(68,136,255,.05)}
+.val-pos{color:#4f8}
+.val-neg{color:#f84}
+
+.mini-chart{height:80px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:6px;margin:8px 0}
+
+.insp-section{margin:10px 0}
+.insp-section h4{font-size:11px;color:var(--accent);margin-bottom:6px}
+.insp-section.gold h4{color:var(--gold)}
+</style>
+</head>
+<body>
+
+<!-- ===== FORMULA EDITOR ===== -->
+<div class="editor">
+  <div class="editor-header">
+    <h1>⚡ Formula Lab</h1>
+    <p>Редактируйте формулы → мгновенно видите результат в 3D</p>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="turbo">TurboQuant</div>
+    <div class="tab gold" data-tab="nautilus">NautilusQuant φ</div>
+    <div class="tab" data-tab="shared">Общие</div>
+  </div>
+
+  <div class="formula-sections">
+    <!-- ===== TURBO QUANT FORMULAS ===== -->
+    <div class="section active" id="sec-turbo">
+      <div class="formula-block">
+        <h3>1. Случайное ортогональное вращение <span class="tag">PolarQuant</span></h3>
+        <div class="desc">Каждая пара координат вращается на случайный угол из PRNG. Делает координаты независимыми.</div>
+        <div class="math">θ = random() × 2π<br>x' = x·cos(θ) − y·sin(θ)<br>y' = x·sin(θ) + y·cos(θ)</div>
+        <textarea class="code-area" id="f-turbo-rotate" spellcheck="false">// Вращение пары (x, y) на случайный угол
+// Переменные: x, y, pairIndex, dim, random
+const angle = random() * 2 * Math.PI;
+const cos_a = Math.cos(angle);
+const sin_a = Math.sin(angle);
+return {
+  x: x * cos_a - y * sin_a,
+  y: x * sin_a + y * cos_a
+};</textarea>
+        <div class="err-msg" id="err-turbo-rotate"></div>
+      </div>
+
+      <div class="formula-block">
+        <h3>2. Перевод в полярные координаты <span class="tag">PolarQuant</span></h3>
+        <div class="desc">Пара (x, y) → (r, θ). Угловое распределение становится предсказуемым после вращения.</div>
+        <div class="math">r = √(x² + y²)<br>θ = atan2(y, x)</div>
+        <textarea class="code-area" id="f-turbo-polar" spellcheck="false">// Декартовые → Полярные
+// Переменные: x, y
+const r = Math.sqrt(x * x + y * y);
+const theta = Math.atan2(y, x);
+return { r, theta };</textarea>
+        <div class="err-msg" id="err-turbo-polar"></div>
+      </div>
+
+      <div class="formula-block">
+        <h3>3. Скалярное квантование Lloyd-Max <span class="tag">Quantizer</span></h3>
+        <div class="desc">Каждое значение сжимается до N бит. Нужны scale и zero-point для каждой группы → overhead.</div>
+        <div class="math">levels = 2^bits<br>q = round((val − min) / (max − min) × (levels−1))<br>dequant = q / (levels−1) × (max − min) + min</div>
+        <textarea class="code-area" id="f-turbo-quant" spellcheck="false">// Квантование значения val
+// Переменные: val, min, max, bits
+const levels = Math.pow(2, bits);
+const norm = (val - min) / (max - min || 1);
+const q = Math.round(norm * (levels - 1));
+const dequant = (q / (levels - 1)) * (max - min) + min;
+return { q, dequant, overhead_bits: 32 }; // 2×FP16 на scale+zp</textarea>
+        <div class="err-msg" id="err-turbo-quant"></div>
+      </div>
+
+      <div class="formula-block">
+        <h3>4. QJL коррекция ошибок <span class="tag">QJL</span></h3>
+        <div class="desc">Остаточная ошибка → 1-битный знак. Устраняет bias скалярных произведений в attention.</div>
+        <div class="math">error = original − quantized<br>sign_bit = sign(error) ∈ {−1, +1}<br>corrected = quantized + sign_bit × |error| × α</div>
+        <textarea class="code-area" id="f-turbo-qjl" spellcheck="false">// QJL 1-bit correction
+// Переменные: original, quantized
+const error = original - quantized;
+const sign_bit = error >= 0 ? 1 : -1;
+const alpha = 0.5; // correction strength
+const corrected = quantized + sign_bit * Math.abs(error) * alpha;
+return { corrected, sign_bit, extra_bits: 1 };</textarea>
+        <div class="err-msg" id="err-turbo-qjl"></div>
+      </div>
+    </div>
+
+    <!-- ===== NAUTILUS QUANT FORMULAS ===== -->
+    <div class="section" id="sec-nautilus">
+      <div class="formula-block gold">
+        <h3>1. Ортогональное спиральное вращение <span class="tag">NautilusQuant v2</span></h3>
+        <div class="desc">Золотой угол 137.5° × индекс. БЕЗ масштабирования! Радиус сохранён: |v'| = |v|. Матрица строго ортогональна: T^T·T=I. Торнадо, не воронка.</div>
+        <div class="math">θ = (2π / φ²) × (pairIndex + 1)<br>x' = x·cos(θ) − y·sin(θ)<br>y' = x·sin(θ) + y·cos(θ)<br>|v'| = |v| ✓ &nbsp; T^T·T = I ✓</div>
+        <textarea class="code-area gold" id="f-naut-rotate" spellcheck="false">// v2: ОРТОГОНАЛЬНОЕ вращение (торнадо, НЕ воронка!)
+// Радиус СОХРАНЯЕТСЯ! T^T·T=I
+// Переменные: x, y, pairIndex, dim, PHI
+const goldenAngle = 2 * Math.PI / (PHI * PHI); // ≈ 137.5°
+const angle = goldenAngle * (pairIndex + 1);
+// ЧИСТОЕ вращение Гивенса — БЕЗ масштабирования!
+const cos_a = Math.cos(angle);
+const sin_a = Math.sin(angle);
+return {
+  x: x * cos_a - y * sin_a,  // |result| == |input| ✓
+  y: x * sin_a + y * cos_a   // ортогональность ✓
+};</textarea>
+        <div class="err-msg" id="err-naut-rotate"></div>
+      </div>
+
+      <div class="formula-block gold">
+        <h3>2. Полярные координаты <span class="tag">NautilusQuant</span></h3>
+        <div class="desc">Аналогично TurboQuant, но распределение после спирали более предсказуемо → лучшее сжатие.</div>
+        <div class="math">r = √(x² + y²)<br>θ = atan2(y, x)</div>
+        <textarea class="code-area gold" id="f-naut-polar" spellcheck="false">// Декартовые → Полярные (после спирали)
+// Переменные: x, y
+const r = Math.sqrt(x * x + y * y);
+const theta = Math.atan2(y, x);
+return { r, theta };</textarea>
+        <div class="err-msg" id="err-naut-polar"></div>
+      </div>
+
+      <div class="formula-block gold">
+        <h3>3. Квантование (Fix 7: честное) <span class="tag">NautilusQuant v2</span></h3>
+        <div class="desc">Fix 7: Формула ИДЕНТИЧНА TurboQuant. Overhead одинаковый. Преимущество NautilusQuant — только в лучшем распределении углов (если оно лучше). Честное сравнение.</div>
+        <div class="math">levels = 2^bits<br>q = round((val − min) / (max − min) × (levels−1))<br>overhead = 32 бит/группа (как у TurboQuant)</div>
+        <textarea class="code-area gold" id="f-naut-quant" spellcheck="false">// Fix 7: ЧЕСТНОЕ квантование — идентично TurboQuant!
+// Нет predicted_scale (убран — ломал ортогональность)
+// Переменные: val, min, max, bits, pairIndex, dim, PHI
+const levels = Math.pow(2, bits);
+const norm = (val - min) / (max - min || 1);
+const q = Math.round(norm * (levels - 1));
+const dequant = (q / (levels - 1)) * (max - min) + min;
+return { q, dequant, overhead_bits: 32 }; // ЧЕСТНО: тот же overhead</textarea>
+        <div class="err-msg" id="err-naut-quant"></div>
+      </div>
+
+      <div class="formula-block gold">
+        <h3>4. QJL коррекция <span class="tag">NautilusQuant</span></h3>
+        <div class="desc">Идентичен TurboQuant. 1 бит на значение. Универсален.</div>
+        <textarea class="code-area gold" id="f-naut-qjl" spellcheck="false">// QJL 1-bit correction (аналогично TurboQuant)
+// Переменные: original, quantized
+const error = original - quantized;
+const sign_bit = error >= 0 ? 1 : -1;
+const alpha = 0.5;
+const corrected = quantized + sign_bit * Math.abs(error) * alpha;
+return { corrected, sign_bit, extra_bits: 1 };</textarea>
+        <div class="err-msg" id="err-naut-qjl"></div>
+      </div>
+
+      <div class="formula-block gold">
+        <h3>⚙ Параметры спирали <span class="tag">Config</span></h3>
+        <div class="desc">Настройте константы. Попробуйте заменить PHI на другие числа и посмотрите что произойдёт.</div>
+        <textarea class="code-area gold" id="f-naut-config" spellcheck="false">// Константы NautilusQuant
+// Измените и нажмите «Применить» чтобы увидеть эффект
+const PHI = (1 + Math.sqrt(5)) / 2;    // 1.6180339887...
+const GOLDEN_ANGLE = 2 * Math.PI / (PHI * PHI); // 137.507764°
+const PI = Math.PI;
+
+// Попробуйте:
+// const PHI = Math.E;           // число Эйлера
+// const PHI = Math.PI;          // Пи вместо φ
+// const PHI = Math.sqrt(2);     // √2
+// const PHI = 1.5;              // просто 1.5
+
+return { PHI, GOLDEN_ANGLE, PI };</textarea>
+        <div class="err-msg" id="err-naut-config"></div>
+      </div>
+    </div>
+
+    <!-- ===== SHARED ===== -->
+    <div class="section" id="sec-shared">
+      <div class="formula-block">
+        <h3>Генератор входных данных <span class="tag">Input</span></h3>
+        <div class="desc">Генерация тестовых KV-кэш векторов с выбросами. Измените для теста разных распределений.</div>
+        <textarea class="code-area" id="f-shared-gen" spellcheck="false">// Генерация одного значения вектора
+// Переменные: random, index, dim
+let val = (random() * 2 - 1);
+// 6% значений — выбросы (×7)
+if (random() < 0.06) val *= 7;
+return val;</textarea>
+        <div class="err-msg" id="err-shared-gen"></div>
+      </div>
+
+      <div class="formula-block">
+        <h3>Метрика ошибки (MSE) <span class="tag">Metric</span></h3>
+        <textarea class="code-area" id="f-shared-mse" spellcheck="false">// MSE между оригиналом и результатом
+// Переменные: original, result (массивы)
+let sum = 0;
+for (let i = 0; i < original.length; i++) {
+  sum += (original[i] - result[i]) ** 2;
+}
+return sum / original.length;</textarea>
+        <div class="err-msg" id="err-shared-mse"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="apply-bar">
+    <button class="btn-primary" id="btn-apply">⚡ Применить формулы</button>
+    <button class="btn-gold" id="btn-apply-naut">φ Применить NautilusQuant</button>
+    <button class="btn-outline" id="btn-defaults">↺ Сброс по умолчанию</button>
+  </div>
+</div>
+
+<!-- ===== 3D VIEWPORT ===== -->
+<div class="viewport">
+  <canvas id="cv"></canvas>
+
+  <div class="vp-overlay">
+    <div class="mode-btn active" data-mode="compare">Сравнение</div>
+    <div class="mode-btn" data-mode="turbo">TurboQuant</div>
+    <div class="mode-btn gold" data-mode="nautilus">NautilusQuant φ</div>
+  </div>
+
+  <div class="vp-info" id="vp-info">
+    <h3 id="vp-stage">Готово к запуску</h3>
+    <p id="vp-desc">Отредактируйте формулы слева и нажмите «Применить».</p>
+  </div>
+
+  <div class="vp-stats">
+    <div class="vstat"><div class="vstat-v" id="vs-comp">—</div><div class="vstat-l">Сжатие</div></div>
+    <div class="vstat"><div class="vstat-v" id="vs-mse-t">—</div><div class="vstat-l">MSE Turbo</div></div>
+    <div class="vstat"><div class="vstat-v" id="vs-mse-n">—</div><div class="vstat-l">MSE Nautilus</div></div>
+    <div class="vstat"><div class="vstat-v" id="vs-over-t">—</div><div class="vstat-l">Overhead T</div></div>
+    <div class="vstat"><div class="vstat-v" id="vs-over-n">—</div><div class="vstat-l">Overhead N</div></div>
+  </div>
+</div>
+
+<!-- ===== DATA INSPECTOR ===== -->
+<div class="inspector">
+  <div class="inspector-header">
+    <h2>📊 Инспектор данных</h2>
+  </div>
+  <div class="insp-body" id="insp-body">
+    <div class="insp-section">
+      <h4>Входные значения (первые 10 пар)</h4>
+      <table class="data-table" id="tbl-input"><thead><tr><th>#</th><th>X</th><th>Y</th><th>|v|</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="insp-section">
+      <h4>После TurboQuant вращения</h4>
+      <table class="data-table" id="tbl-turbo"><thead><tr><th>#</th><th>X'</th><th>Y'</th><th>θ°</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="insp-section gold">
+      <h4>После NautilusQuant спирали</h4>
+      <table class="data-table" id="tbl-naut"><thead><tr><th>#</th><th>X'</th><th>Y'</th><th>θ°</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="insp-section">
+      <h4>Распределение углов</h4>
+      <canvas id="hist" class="mini-chart" width="240" height="80"></canvas>
+    </div>
+    <div class="insp-section">
+      <h4>Ошибка по парам</h4>
+      <canvas id="errchart" class="mini-chart" width="240" height="80"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===================== CONSTANTS =====================
+let USER_PHI = (1+Math.sqrt(5))/2;
+const PI=Math.PI, TAU=2*PI;
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+// ===================== FORMULA ENGINE =====================
+// Compile user formulas safely
+function compileFormula(code, params){
+  try{
+    const fn = new Function(...params, code);
+    return{fn,error:null};
+  }catch(e){
+    return{fn:null,error:e.message};
+  }
+}
+
+function runFormula(fn, args){
+  try{return{result:fn(...args),error:null}}catch(e){return{result:null,error:e.message}}
+}
+
+// Default formulas (stored as textarea values)
+const DEFAULTS = {};
+document.querySelectorAll('.code-area').forEach(el => DEFAULTS[el.id] = el.value);
+
+// ===================== DATA PIPELINE =====================
+const N_PAIRS = 60;
+const BITS = 3;
+
+let inputPairs = [];    // [{x,y}, ...]
+let turboResults = [];  // [{rotated, polar, quantized, corrected}, ...]
+let nautResults = [];
+
+function generateInput(){
+  const r = rng(42);
+  inputPairs = [];
+  for(let i = 0; i < N_PAIRS; i++){
+    let x = r()*2-1, y = r()*2-1;
+    if(r()<0.06){x*=7;y*=7}
+    inputPairs.push({x,y});
+  }
+}
+
+function runTurboPipeline(){
+  turboResults = [];
+  const r = rng(77);
+  const allVals = [];
+
+  // Step 1: Rotate
+  const rotated = inputPairs.map((p,i)=>{
+    const code = document.getElementById('f-turbo-rotate').value;
+    const {fn,error} = compileFormula(code, ['x','y','pairIndex','dim','random']);
+    if(error){showErr('err-turbo-rotate',error);return{x:p.x,y:p.y}}
+    clearErr('err-turbo-rotate');
+    const localR = rng(i*77+31);
+    const res = runFormula(fn,[p.x,p.y,i,N_PAIRS,localR]);
+    if(res.error){showErr('err-turbo-rotate',res.error);return{x:p.x,y:p.y}}
+    return res.result;
+  });
+
+  // Step 2: Polar
+  const polar = rotated.map((p,i)=>{
+    const code = document.getElementById('f-turbo-polar').value;
+    const {fn,error} = compileFormula(code, ['x','y']);
+    if(error){showErr('err-turbo-polar',error);return{r:1,theta:0}}
+    clearErr('err-turbo-polar');
+    const res = runFormula(fn,[p.x,p.y]);
+    if(res.error){showErr('err-turbo-polar',res.error);return{r:1,theta:0}}
+    return res.result;
+  });
+
+  // Collect all values for min/max
+  const rVals = polar.map(p=>p.r), tVals = polar.map(p=>p.theta);
+  const rMin=Math.min(...rVals),rMax=Math.max(...rVals);
+  const tMin=Math.min(...tVals),tMax=Math.max(...tVals);
+
+  // Step 3: Quantize
+  const quantized = polar.map((p,i)=>{
+    const code = document.getElementById('f-turbo-quant').value;
+    const {fn,error} = compileFormula(code, ['val','min','max','bits']);
+    if(error){showErr('err-turbo-quant',error);return{r:p.r,theta:p.theta,overhead:32}}
+    clearErr('err-turbo-quant');
+    const qr = runFormula(fn,[p.r,rMin,rMax,BITS]);
+    const qt = runFormula(fn,[p.theta,tMin,tMax,BITS]);
+    if(qr.error||qt.error){showErr('err-turbo-quant',(qr.error||qt.error));return{r:p.r,theta:p.theta,overhead:32}}
+    return{r:qr.result.dequant,theta:qt.result.dequant,overhead:qr.result.overhead_bits};
+  });
+
+  // Step 4: QJL
+  const corrected = polar.map((p,i)=>{
+    const code = document.getElementById('f-turbo-qjl').value;
+    const {fn,error} = compileFormula(code, ['original','quantized']);
+    if(error){showErr('err-turbo-qjl',error);return quantized[i]}
+    clearErr('err-turbo-qjl');
+    const cr = runFormula(fn,[p.r,quantized[i].r]);
+    const ct = runFormula(fn,[p.theta,quantized[i].theta]);
+    if(cr.error){showErr('err-turbo-qjl',cr.error);return quantized[i]}
+    return{r:cr.result.corrected,theta:ct.result.corrected,extra:cr.result.extra_bits,overhead:quantized[i].overhead};
+  });
+
+  turboResults = inputPairs.map((inp,i)=>({
+    input:inp,
+    rotated:rotated[i],
+    polar:polar[i],
+    quantized:quantized[i],
+    corrected:corrected[i]
+  }));
+}
+
+function runNautilusPipeline(){
+  nautResults = [];
+
+  // Load config
+  try{
+    const configCode = document.getElementById('f-naut-config').value;
+    const {fn,error} = compileFormula(configCode,[]);
+    if(!error){
+      const cfg = fn();
+      if(cfg && cfg.PHI) USER_PHI = cfg.PHI;
+      clearErr('err-naut-config');
+    } else showErr('err-naut-config',error);
+  }catch(e){showErr('err-naut-config',e.message)}
+
+  // Step 1: Golden spiral rotation
+  const rotated = inputPairs.map((p,i)=>{
+    const code = document.getElementById('f-naut-rotate').value;
+    const {fn,error} = compileFormula(code, ['x','y','pairIndex','dim','PHI']);
+    if(error){showErr('err-naut-rotate',error);return{x:p.x,y:p.y}}
+    clearErr('err-naut-rotate');
+    const res = runFormula(fn,[p.x,p.y,i,N_PAIRS,USER_PHI]);
+    if(res.error){showErr('err-naut-rotate',res.error);return{x:p.x,y:p.y}}
+    return res.result;
+  });
+
+  // Step 2: Polar
+  const polar = rotated.map((p,i)=>{
+    const code = document.getElementById('f-naut-polar').value;
+    const {fn,error} = compileFormula(code, ['x','y']);
+    if(error)return{r:1,theta:0};
+    clearErr('err-naut-polar');
+    const res = runFormula(fn,[p.x,p.y]);
+    return res.error?{r:1,theta:0}:res.result;
+  });
+
+  const rVals=polar.map(p=>p.r),tVals=polar.map(p=>p.theta);
+  const rMin=Math.min(...rVals),rMax=Math.max(...rVals),tMin=Math.min(...tVals),tMax=Math.max(...tVals);
+
+  // Step 3: Quantize (no overhead)
+  const quantized = polar.map((p,i)=>{
+    const code = document.getElementById('f-naut-quant').value;
+    const {fn,error} = compileFormula(code, ['val','min','max','bits','pairIndex','dim','PHI']);
+    if(error){showErr('err-naut-quant',error);return{r:p.r,theta:p.theta,overhead:0}}
+    clearErr('err-naut-quant');
+    const qr = runFormula(fn,[p.r,rMin,rMax,BITS,i,N_PAIRS,USER_PHI]);
+    const qt = runFormula(fn,[p.theta,tMin,tMax,BITS,i,N_PAIRS,USER_PHI]);
+    if(qr.error){showErr('err-naut-quant',qr.error);return{r:p.r,theta:p.theta,overhead:0}}
+    return{r:qr.result.dequant,theta:qt.result.dequant,overhead:qr.result.overhead_bits};
+  });
+
+  // Step 4: QJL
+  const corrected = polar.map((p,i)=>{
+    const code = document.getElementById('f-naut-qjl').value;
+    const {fn,error} = compileFormula(code, ['original','quantized']);
+    if(error)return quantized[i];
+    const cr = runFormula(fn,[p.r,quantized[i].r]);
+    const ct = runFormula(fn,[p.theta,quantized[i].theta]);
+    if(cr.error)return quantized[i];
+    return{r:cr.result.corrected,theta:ct.result.corrected,extra:cr.result.extra_bits,overhead:quantized[i].overhead};
+  });
+
+  nautResults = inputPairs.map((inp,i)=>({
+    input:inp,
+    rotated:rotated[i],
+    polar:polar[i],
+    quantized:quantized[i],
+    corrected:corrected[i]
+  }));
+}
+
+// ===================== ERROR DISPLAY =====================
+function showErr(id,msg){const el=document.getElementById(id);if(el){el.textContent='⚠ '+msg;el.classList.add('visible')}}
+function clearErr(id){const el=document.getElementById(id);if(el){el.textContent='';el.classList.remove('visible')}}
+
+// ===================== DATA INSPECTOR =====================
+function updateInspector(){
+  // Input table
+  fillTable('tbl-input', inputPairs.slice(0,10).map((p,i)=>[
+    i, fmt(p.x), fmt(p.y), fmt(Math.sqrt(p.x*p.x+p.y*p.y))
+  ]));
+
+  // Turbo table
+  if(turboResults.length)
+    fillTable('tbl-turbo', turboResults.slice(0,10).map((r,i)=>[
+      i, fmt(r.rotated.x), fmt(r.rotated.y),
+      fmt(Math.atan2(r.rotated.y,r.rotated.x)*180/PI)+'°'
+    ]));
+
+  // Nautilus table
+  if(nautResults.length)
+    fillTable('tbl-naut', nautResults.slice(0,10).map((r,i)=>[
+      i, fmt(r.rotated.x), fmt(r.rotated.y),
+      fmt(Math.atan2(r.rotated.y,r.rotated.x)*180/PI)+'°'
+    ]));
+
+  // Histograms
+  drawAngleHistogram();
+  drawErrorChart();
+}
+
+function fmt(v){return typeof v==='number'?v.toFixed(3):String(v)}
+
+function fillTable(id,rows){
+  const tbody=document.querySelector('#'+id+' tbody');
+  tbody.innerHTML='';
+  for(const row of rows){
+    const tr=document.createElement('tr');
+    for(const cell of row){
+      const td=document.createElement('td');
+      td.className='num';
+      td.textContent=cell;
+      const n=parseFloat(cell);
+      if(!isNaN(n)){td.classList.add(n>=0?'val-pos':'val-neg')}
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+}
+
+function drawAngleHistogram(){
+  const canvas=document.getElementById('hist');
+  const ctx=canvas.getContext('2d');
+  const w=canvas.width,h=canvas.height;
+  ctx.fillStyle='rgba(10,10,20,1)';ctx.fillRect(0,0,w,h);
+
+  const bins=24;
+  const tBins=new Float64Array(bins);
+  const nBins=new Float64Array(bins);
+
+  for(const r of turboResults){
+    const a=(Math.atan2(r.rotated.y,r.rotated.x)+PI)/TAU;
+    tBins[Math.min(bins-1,Math.floor(a*bins))]++;
+  }
+  for(const r of nautResults){
+    const a=(Math.atan2(r.rotated.y,r.rotated.x)+PI)/TAU;
+    nBins[Math.min(bins-1,Math.floor(a*bins))]++;
+  }
+
+  const maxV=Math.max(...tBins,...nBins,1);
+  const bw=w/bins;
+
+  for(let i=0;i<bins;i++){
+    const th=tBins[i]/maxV*(h-10);
+    ctx.fillStyle='rgba(68,136,255,.5)';
+    ctx.fillRect(i*bw+1,h-th,bw/2-1,th);
+
+    const nh=nBins[i]/maxV*(h-10);
+    ctx.fillStyle='rgba(255,204,0,.5)';
+    ctx.fillRect(i*bw+bw/2,h-nh,bw/2-1,nh);
+  }
+
+  ctx.fillStyle='#446';ctx.font='8px monospace';
+  ctx.fillText('Turbo (синий) vs Nautilus (золотой)',4,10);
+}
+
+function drawErrorChart(){
+  const canvas=document.getElementById('errchart');
+  const ctx=canvas.getContext('2d');
+  const w=canvas.width,h=canvas.height;
+  ctx.fillStyle='rgba(10,10,20,1)';ctx.fillRect(0,0,w,h);
+
+  const n=Math.min(turboResults.length,nautResults.length,60);
+  if(!n)return;
+
+  const tErr=[],nErr=[];
+  for(let i=0;i<n;i++){
+    const t=turboResults[i],nr=nautResults[i];
+    tErr.push(Math.abs(t.polar.r-t.corrected.r));
+    nErr.push(Math.abs(nr.polar.r-nr.corrected.r));
+  }
+
+  const maxE=Math.max(...tErr,...nErr,.001);
+  const dx=w/n;
+
+  ctx.strokeStyle='#4488ff';ctx.lineWidth=1;ctx.beginPath();
+  for(let i=0;i<n;i++){ctx.lineTo(i*dx,h-tErr[i]/maxE*(h-10))}ctx.stroke();
+
+  ctx.strokeStyle='#ffcc00';ctx.beginPath();
+  for(let i=0;i<n;i++){ctx.lineTo(i*dx,h-nErr[i]/maxE*(h-10))}ctx.stroke();
+
+  ctx.fillStyle='#446';ctx.font='8px monospace';
+  ctx.fillText('Ошибка: Turbo (синий) vs Nautilus (золотой)',4,10);
+}
+
+// ===================== 3D VIEWPORT =====================
+const cv=document.getElementById('cv'),ccx=cv.getContext('2d');
+let VW,VH;
+function resizeVP(){
+  const vp=cv.parentElement;
+  VW=cv.width=vp.clientWidth;
+  VH=cv.height=vp.clientHeight;
+}
+resizeVP();addEventListener('resize',resizeVP);
+
+let cam={rx:-.2,ry:.4,d:14};
+let drag=false,mx0=0,my0=0;
+cv.onmousedown=e=>{drag=true;mx0=e.clientX;my0=e.clientY};
+cv.onmousemove=e=>{if(!drag)return;cam.ry+=(e.clientX-mx0)*.005;cam.rx+=(e.clientY-my0)*.005;cam.rx=Math.max(-1.2,Math.min(1.2,cam.rx));mx0=e.clientX;my0=e.clientY};
+cv.onmouseup=()=>drag=false;
+cv.onwheel=e=>{cam.d*=e.deltaY>0?1.08:.92;cam.d=Math.max(4,Math.min(30,cam.d))};
+
+function pj(x,y,z){
+  let cy=Math.cos(cam.ry),sy=Math.sin(cam.ry),x1=x*cy-z*sy,z1=x*sy+z*cy;
+  let cx2=Math.cos(cam.rx),sx=Math.sin(cam.rx),y1=y*cx2-z1*sx,z2=y*sx+z1*cx2;
+  let sc=500/(cam.d+z2+8);
+  return{x:VW/2+x1*sc,y:VH/2-y1*sc,z:z2,s:sc}
+}
+
+let VIEW_MODE='compare';
+
+function draw3D(){
+  ccx.fillStyle='#07080e';ccx.fillRect(0,0,VW,VH);
+
+  // Grid
+  ccx.strokeStyle='rgba(25,35,60,.25)';ccx.lineWidth=.5;
+  for(let i=-4;i<=4;i++){
+    let a=pj(i,0,-4),b=pj(i,0,4);ccx.beginPath();ccx.moveTo(a.x,a.y);ccx.lineTo(b.x,b.y);ccx.stroke();
+    a=pj(-4,0,i);b=pj(4,0,i);ccx.beginPath();ccx.moveTo(a.x,a.y);ccx.lineTo(b.x,b.y);ccx.stroke();
+  }
+
+  const GA=2*PI/(USER_PHI*USER_PHI);
+
+  if(VIEW_MODE==='compare'||VIEW_MODE==='turbo'){
+    const ox=VIEW_MODE==='compare'?-4:0;
+    // Turbo particles
+    const pts=turboResults.map((r,i)=>{
+      const a=Math.atan2(r.rotated.y,r.rotated.x);
+      const rad=Math.sqrt(r.rotated.x**2+r.rotated.y**2)*0.8;
+      return{x:rad*Math.cos(a)+ox, y:r.rotated.y*0.5, z:rad*Math.sin(a)};
+    });
+    drawDots3D(pts,'#4488ff',false,3);
+
+    // Label
+    const lp=pj(ox,5,0);
+    ccx.font='bold 12px sans-serif';ccx.textAlign='center';ccx.fillStyle='#5af';
+    ccx.fillText('TurboQuant',lp.x,lp.y);
+  }
+
+  if(VIEW_MODE==='compare'||VIEW_MODE==='nautilus'){
+    const ox=VIEW_MODE==='compare'?4:0;
+
+    // Golden spiral
+    ccx.globalAlpha=.35;ccx.strokeStyle='#ffcc00';ccx.lineWidth=2.5;
+    ccx.shadowColor='#ffaa00';ccx.shadowBlur=10;
+    ccx.beginPath();
+    let first=true;
+    for(let i=0;i<=400;i++){
+      const t=i/400;
+      const angle=GA*t*N_PAIRS;
+      const r2=0.3+2.8*t;
+      const pp=pj(r2*Math.cos(angle)+ox, Math.cos(t*4*PI)*0.15, r2*Math.sin(angle));
+      if(first){ccx.moveTo(pp.x,pp.y);first=false}else ccx.lineTo(pp.x,pp.y);
+    }
+    ccx.stroke();ccx.shadowBlur=0;ccx.globalAlpha=1;
+
+    // Nautilus particles ON the spiral
+    const pts=nautResults.map((r,i)=>{
+      const angle=GA*i;
+      const rad=0.3+2.8*(i/N_PAIRS);
+      const energy=Math.sqrt(r.rotated.x**2+r.rotated.y**2);
+      return{x:rad*Math.cos(angle)+ox, y:energy*0.12*Math.cos(angle*0.3), z:rad*Math.sin(angle)};
+    });
+
+    // Spiral line through particles
+    ccx.strokeStyle='#ffcc0033';ccx.lineWidth=.8;ccx.beginPath();
+    const p0=pj(pts[0].x,pts[0].y,pts[0].z);ccx.moveTo(p0.x,p0.y);
+    for(let i=1;i<pts.length;i++){const p=pj(pts[i].x,pts[i].y,pts[i].z);ccx.lineTo(p.x,p.y)}
+    ccx.stroke();
+
+    drawDots3D(pts,'#ffcc00',true,3.5);
+
+    // Symbols
+    const pp=pj(ox+3,3.5,0);ccx.font='bold 28px serif';ccx.fillStyle='rgba(255,204,0,.15)';
+    ccx.textAlign='center';ccx.fillText('φ',pp.x,pp.y);
+    const pp2=pj(ox-3,3,0);ccx.fillText('π',pp2.x,pp2.y);
+
+    const lp=pj(ox,5,0);
+    ccx.font='bold 12px sans-serif';ccx.fillStyle='#fc0';
+    ccx.fillText('NautilusQuant (φ·π)',lp.x,lp.y);
+  }
+
+  ccx.textAlign='left';
+}
+
+function drawDots3D(positions,color,glow,size){
+  const pts=positions.map((p,i)=>({...pj(p.x,p.y,p.z),i})).sort((a,b)=>a.z-b.z);
+  for(const pt of pts){
+    const r=Math.max(1,(size||3)*pt.s*.06);
+    ccx.globalAlpha=Math.min(.9,300/(pt.z+cam.d+8));
+    if(glow){
+      const g=ccx.createRadialGradient(pt.x,pt.y,0,pt.x,pt.y,r*3.5);
+      g.addColorStop(0,color);g.addColorStop(.5,color+'66');g.addColorStop(1,'transparent');
+      ccx.fillStyle=g;ccx.beginPath();ccx.arc(pt.x,pt.y,r*3.5,0,TAU);ccx.fill();
+    }
+    ccx.fillStyle=color;ccx.beginPath();ccx.arc(pt.x,pt.y,r,0,TAU);ccx.fill();
+  }
+  ccx.globalAlpha=1;
+}
+
+// ===================== STATS =====================
+function updateStats(){
+  const tMSE=computeMSE(turboResults);
+  const nMSE=computeMSE(nautResults);
+  const tOver=turboResults.length?turboResults[0].corrected.overhead||32:0;
+  const nOver=nautResults.length?nautResults[0].corrected.overhead||0:0;
+
+  document.getElementById('vs-comp').textContent=(16/BITS).toFixed(1)+'x';
+  document.getElementById('vs-mse-t').textContent=tMSE.toFixed(5);
+  document.getElementById('vs-mse-n').textContent=nMSE.toFixed(5);
+  document.getElementById('vs-over-t').textContent=tOver+' бит';
+  document.getElementById('vs-over-n').textContent=nOver+' бит';
+}
+
+function computeMSE(results){
+  if(!results.length)return 0;
+  let sum=0;
+  for(const r of results){
+    sum+=(r.polar.r-(r.corrected.r||0))**2;
+    sum+=(r.polar.theta-(r.corrected.theta||0))**2;
+  }
+  return sum/(results.length*2);
+}
+
+// ===================== UI BINDING =====================
+// Tabs
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.onclick=()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('sec-'+tab.dataset.tab).classList.add('active');
+  };
+});
+
+// View mode buttons
+document.querySelectorAll('.mode-btn').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    VIEW_MODE=btn.dataset.mode;
+  };
+});
+
+// Apply buttons
+document.getElementById('btn-apply').onclick=runAll;
+document.getElementById('btn-apply-naut').onclick=()=>{
+  runNautilusPipeline();updateInspector();updateStats();
+};
+document.getElementById('btn-defaults').onclick=()=>{
+  for(const[id,val]of Object.entries(DEFAULTS)){
+    document.getElementById(id).value=val;
+  }
+  runAll();
+};
+
+function runAll(){
+  generateInput();
+  runTurboPipeline();
+  runNautilusPipeline();
+  updateInspector();
+  updateStats();
+}
+
+// ===================== MAIN LOOP =====================
+runAll();
+
+function frame(){
+  if(!drag)cam.ry+=.002;
+  draw3D();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
