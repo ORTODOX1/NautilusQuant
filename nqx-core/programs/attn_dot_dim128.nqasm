@@ -1,0 +1,14 @@
+; Polar-domain attention dot product Q.K (no IPOLAR, no decode).
+; V0: Q vectors (already rotated+polar); V1: K vectors (idem).
+LDV V0, [0x0]
+LDV V1, [0x10000]
+GVNS V0, 0
+GVNS V0, 1
+GVNS V0, 2
+POLAR V0
+GVNS V1, 0
+GVNS V1, 1
+GVNS V1, 2
+POLAR V1
+ATTN_DOT V0, V1
+HALT

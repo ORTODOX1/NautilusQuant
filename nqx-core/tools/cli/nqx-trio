@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# nqx-trio — open three tmux panes: Claude, DeepSeek, Codex,
+# all chrooted into the NQX-Core project.
+set -e
+PROJECT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+SESSION="nqx-trio"
+
+if ! command -v tmux >/dev/null 2>&1; then
+    echo "tmux not installed. Run: sudo pacman -S tmux  (or apt-get install tmux)"
+    exit 1
+fi
+
+if tmux has-session -t "$SESSION" 2>/dev/null; then
+    exec tmux attach -t "$SESSION"
+fi
+
+cd "$PROJECT"
+
+tmux new-session  -d -s "$SESSION" -n trio -c "$PROJECT" \
+    "$PROJECT/tools/cli/nqx-claude"
+
+tmux split-window -h -t "$SESSION":trio -c "$PROJECT" \
+    "$PROJECT/tools/cli/nqx-deepseek"
+
+tmux split-window -v -t "$SESSION":trio.1 -c "$PROJECT" \
+    "$PROJECT/tools/cli/nqx-codex"
+
+tmux select-layout -t "$SESSION":trio main-vertical
+exec tmux attach -t "$SESSION"

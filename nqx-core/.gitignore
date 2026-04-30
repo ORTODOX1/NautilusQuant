@@ -1,0 +1,103 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+build/
+dist/
+.tox/
+.coverage
+.coverage.*
+htmlcov/
+.hypothesis/
+
+# Virtual envs
+.venv/
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Notebooks
+.ipynb_checkpoints/
+*.ipynb_meta
+
+# NQX local artifacts
+audits/results/
+audits/logs/
+audits/snapshots/
+server/logs/
+demos/results-*.md
+
+# Bench / regression artifacts
+bench/results/
+bench/data/
+
+# RTL build artifacts
+rtl/build/
+rtl/synth/runs/
+rtl/openlane/runs/
+rtl/formal/work/
+rtl/formal/proof/
+*.vcd
+*.fst
+*.lxt
+*.lxt2
+*.lst
+
+# OpenLane / Vivado
+*.synth.v
+*.def
+*.lef
+*.gds
+*.gds.gz
+*.lib
+*.spef
+*.sdf
+*.sdc
+
+# Firmware build
+firmware/boot/*.bin
+firmware/boot/*.hex
+firmware/driver/*.ko
+firmware/driver/*.o
+firmware/driver/.cache/
+firmware/driver/Module.symvers
+firmware/driver/modules.order
+
+# SDK build
+sdk/libnqx/*.so
+sdk/libnqx/*.dylib
+sdk/libnqx/*.dll
+sdk/libnqx/*.a
+
+# Docker
+.dockerignore.local
+
+# Local secrets
+.env
+.env.local
+*.key
+*.pem
+
+# OS noise
+*.log
+*.tmp
+*.bak
+
+# Large fixture artifacts
+tests/fixtures/data/*.npy
+tests/fixtures/golden/*.npz

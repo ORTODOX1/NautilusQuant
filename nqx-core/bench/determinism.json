@@ -1,0 +1,11 @@
+{
+  "phi_unique_hashes": 1,
+  "phi_first_hash": "6c1f7199ca8c5e62d901042c9887cf6a5fb2a115532ead405e9490a238d26bee",
+  "rand_unique_hashes": 50,
+  "rand_first_hash": "df960c5a8f8a4752be0192b6e7630d43d917b7fa78dfb724faf4f58318065195",
+  "n_repeats": 50,
+  "dim": 128,
+  "n_vec": 64,
+  "phi_all_match": true,
+  "rand_all_match": false
+}

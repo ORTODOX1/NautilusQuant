@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# OpenAI Codex CLI scoped to the NQX-Core project.
+set -e
+PROJECT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$PROJECT"
+
+echo "═══════════════════════════════════════════════════════════"
+echo " NQX-Core / Codex CLI"
+echo " WorkDir: $PROJECT"
+echo "═══════════════════════════════════════════════════════════"
+echo
+exec codex "$@"

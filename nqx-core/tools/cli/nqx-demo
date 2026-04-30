@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# nqx-demo — single-command demonstration of NQX-Core advantages.
+set -e
+PROJECT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$PROJECT"
+
+if [ ! -f demos/run_demo.py ]; then
+    echo "demos/run_demo.py not found — Round 4 D7 task not done yet."
+    echo "Open audits/prompts/demo.md to see what's pending."
+    exit 1
+fi
+
+echo "═══════════════════════════════════════════════════════════"
+echo " NQX-Core DEMO — TurboQuant vs NautilusQuant side-by-side"
+echo "═══════════════════════════════════════════════════════════"
+python demos/run_demo.py "$@"
+status=$?
+echo
+echo "Open demos/pitch.md, demos/why_it_works.md, demos/side_by_side.md to read"
+exit $status

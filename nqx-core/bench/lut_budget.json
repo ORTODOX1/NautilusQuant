@@ -1,0 +1,106 @@
+[
+  {
+    "dim": 64,
+    "phi": {
+      "dim": 64,
+      "layers": {
+        "L1": {
+          "pairs": 32,
+          "bytes": 320
+        },
+        "L2": {
+          "pairs": 31,
+          "bytes": 310
+        },
+        "L3": {
+          "pairs": 32,
+          "bytes": 320
+        }
+      },
+      "total_bytes": 950
+    },
+    "random": {
+      "dim": 64,
+      "fp16_bytes": 8192,
+      "fp32_bytes": 16384
+    }
+  },
+  {
+    "dim": 128,
+    "phi": {
+      "dim": 128,
+      "layers": {
+        "L1": {
+          "pairs": 64,
+          "bytes": 640
+        },
+        "L2": {
+          "pairs": 63,
+          "bytes": 630
+        },
+        "L3": {
+          "pairs": 64,
+          "bytes": 640
+        }
+      },
+      "total_bytes": 1910
+    },
+    "random": {
+      "dim": 128,
+      "fp16_bytes": 32768,
+      "fp32_bytes": 65536
+    }
+  },
+  {
+    "dim": 256,
+    "phi": {
+      "dim": 256,
+      "layers": {
+        "L1": {
+          "pairs": 128,
+          "bytes": 1280
+        },
+        "L2": {
+          "pairs": 127,
+          "bytes": 1270
+        },
+        "L3": {
+          "pairs": 128,
+          "bytes": 1280
+        }
+      },
+      "total_bytes": 3830
+    },
+    "random": {
+      "dim": 256,
+      "fp16_bytes": 131072,
+      "fp32_bytes": 262144
+    }
+  },
+  {
+    "dim": 512,
+    "phi": {
+      "dim": 512,
+      "layers": {
+        "L1": {
+          "pairs": 256,
+          "bytes": 2560
+        },
+        "L2": {
+          "pairs": 255,
+          "bytes": 2550
+        },
+        "L3": {
+          "pairs": 256,
+          "bytes": 2560
+        }
+      },
+      "total_bytes": 7670
+    },
+    "random": {
+      "dim": 512,
+      "fp16_bytes": 524288,
+      "fp32_bytes": 1048576
+    }
+  }
+]

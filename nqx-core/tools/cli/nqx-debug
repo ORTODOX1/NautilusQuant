@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+
+if [ $# -lt 1 ]; then
+    echo "Usage: nqx-debug <vector.npy>"
+    echo "  Step-by-step encode inspection"
+    exit 1
+fi
+
+exec python "$DIR/tools/debug/inspect_encode.py" "$@"

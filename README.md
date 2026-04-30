@@ -30,6 +30,27 @@
 
 ---
 
+
+---
+
+> ### 🆕 NQX-Core — pre-silicon emulator and chip development kit
+>
+> Software model of the deterministic dataflow processor that NautilusQuant
+> maps to 1:1. Includes 21-opcode NQ-ISA + assembler/disassembler, 7 functional
+> units, SystemVerilog RTL skeleton (Verilator + Yosys + OpenLane for Skywater
+> MPW shuttle), ASIC floor-plan + timing-closure docs, FastAPI server with
+> monitoring/chaos-tests, demo runner with side-by-side TurboQuant comparison,
+> and 6 proof-of-concept benchmarks. **241 tests passing.**
+>
+> 📁 [`nqx-core/`](nqx-core/) — directory with the full sub-project
+> 📖 [`nqx-core/README.md`](nqx-core/README.md) — quick start
+> 🚀 [`nqx-core/demos/pitch.md`](nqx-core/demos/pitch.md) — 10-slide pitch deck
+> 🛠 [`nqx-core/docs/PRD.md`](nqx-core/docs/PRD.md) — roadmap E1-E6
+> 🔬 [`nqx-core/asic/`](nqx-core/asic/) — floor-plan, timing, tape-out checklist
+> 📊 [`nqx-core/demos/side_by_side.md`](nqx-core/demos/side_by_side.md) — main comparison table
+
+---
+
 ## The Problem
 
 Large Language Models are **memory-bound**, not compute-bound. During text generation, up to **80% of GPU memory** is consumed by the KV-cache (Key-Value cache) — the attention mechanism's working memory. For a 7B model at 128K context, this can reach **64 GB** in FP16.

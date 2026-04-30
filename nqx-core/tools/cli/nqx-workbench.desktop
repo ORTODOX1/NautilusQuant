@@ -1,0 +1,14 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=NQX-Core Workbench
+GenericName=NautilusQuant Accelerator — Heavy + Routine
+Comment=Запустить Claude (heavy) + DeepSeek Flash (routine) в двух независимых окнах
+Exec=/home/user/nautilusquantcore/tools/cli/nqx-launch-all
+Path=/home/user/nautilusquantcore
+Icon=utilities-terminal
+Terminal=false
+Categories=Development;Utility;
+Keywords=nqx;nautilusquant;claude;deepseek;ai;agent;cli;
+StartupNotify=true
+StartupWMClass=nqx-heavy

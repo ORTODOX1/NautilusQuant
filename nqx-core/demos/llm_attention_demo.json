@@ -1,0 +1,12 @@
+{
+  "n_heads": 8,
+  "seq": 512,
+  "dim": 128,
+  "rmse_attention_output": 0.011114918226373133,
+  "rmse_k_recon": 0.1978645920753479,
+  "rmse_v_recon": 0.1974424570798874,
+  "kv_bytes_fp16": 2097152,
+  "kv_bytes_nqx": 524288,
+  "compression_ratio": 4.0,
+  "cycles_per_token_nqx": 32
+}

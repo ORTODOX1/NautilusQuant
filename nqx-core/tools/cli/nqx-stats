@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+LOG="$HOME/.claude/mcp-servers/multi-ai/.calls.jsonl"
+
+echo "=== NQX stats ==="
+
+audit_logs=$(find "$DIR/audits/logs/" -type f 2>/dev/null | wc -l)
+echo "Audit log files: $audit_logs"
+
+if [ -f "$LOG" ]; then
+    total=$(wc -l < "$LOG")
+    echo "Multi-AI calls: $total"
+    echo ""
+    echo "Breakdown by model:"
+    jq -r '.model // "unknown"' "$LOG" | sort | uniq -c | sort -rn | while read -r n m; do
+        echo "  $m: $n calls"
+    done
+    echo ""
+    echo "Tokens (approx):"
+    jq -r '[.input_tokens // 0, .output_tokens // 0] | @tsv' "$LOG" | \
+        awk '{i+=$1; o+=$2} END {printf "  input: %d\n  output: %d\n  total: %d\n", i, o, i+o}'
+else
+    echo "Multi-AI log: not found ($LOG)"
+    echo "No call data available yet."
+fi

@@ -1,0 +1,19 @@
+; --- Full per-vector NautilusQuant encode for dim=128 ---
+; Loads a batch from HBM, runs 3 Givens layers, polar conversion,
+; 3-bit Lloyd-Max quantize, QJL sign correction, packs and stores.
+
+LDV     V0, [0x00000000]    ; HBM -> VRF (FP16 -> FP32 via SRAM_in)
+
+GVNS    V0, 0               ; Layer 1: adjacent pairs, theta_k = ga*(k+1)
+GVNS    V0, 1               ; Layer 2: shifted pairs, theta_k = ga*(k+1)*phi
+GVNS    V0, 2               ; Layer 3: butterfly stride dim/4
+
+POLAR   V0                  ; (x_2k, x_2k+1) -> (r, theta)
+
+MOV     V1, V0              ; backup polar in V1 for QJL ref
+QUANT   V0, 3               ; Lloyd-Max 3 bit, mins/maxs side-band
+QJL     V1, V0, 0x80        ; alpha = 0.5 (Q1.7); V1 := corrected
+PACK3   V1, V0              ; pack 3+1 bits to SRAM_out
+
+STV     V1, [0x10000000]    ; SRAM_out -> HBM (compressed payload)
+HALT

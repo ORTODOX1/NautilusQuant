@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+PASS="${GREEN}✓${NC}"
+FAIL="${RED}✗${NC}"
+errors=0
+
+ok()  { echo -e "  $PASS $1"; }
+err() { echo -e "  $FAIL $1"; errors=$((errors + 1)); }
+
+echo "=== Python packages ==="
+for mod in numpy pytest fastapi uvicorn; do
+    if python -c "import $mod" 2>/dev/null; then ok "$mod"; else err "$mod"; fi
+done
+
+echo ""
+echo "=== CLI tools in PATH ==="
+for cmd in claude codex deepseek-cli; do
+    if command -v "$cmd" &>/dev/null; then ok "$cmd"; else err "$cmd"; fi
+done
+
+echo ""
+echo "=== ~/.local/bin/nqx-* symlinks ==="
+found=0
+for f in "$HOME/.local/bin/nqx-"*; do
+    [ -f "$f" ] || [ -L "$f" ] || continue
+    found=1
+    if [ -L "$f" ] && [ -e "$f" ]; then ok "$(basename "$f") → $(readlink "$f")"
+    elif [ -L "$f" ] && [ ! -e "$f" ]; then err "$(basename "$f") → BROKEN LINK"
+    else ok "$(basename "$f") (file)"
+    fi
+done
+[ "$found" -eq 0 ] && err "no nqx-* entries in ~/.local/bin"
+
+echo ""
+echo "=== Desktop entry ==="
+desktop="$HOME/Desktop/NQX-Core.desktop"
+if [ -f "$desktop" ]; then
+    ok "NQX-Core.desktop exists"
+    if [ -x "$desktop" ]; then ok "NQX-Core.desktop executable"
+    else err "NQX-Core.desktop NOT executable"; fi
+else
+    err "NQX-Core.desktop NOT FOUND"
+fi
+
+echo ""
+echo "=== pytest ==="
+cd "$DIR"
+if python -m pytest tests -q --tb=no 2>&1; then ok "all tests pass"
+else err "some tests FAIL (see above)"; fi
+
+echo ""
+if [ "$errors" -eq 0 ]; then echo -e "${GREEN}All checks passed.${NC}"
+else echo -e "${RED}$errors check(s) failed.${NC}"
+fi
+exit "$errors"

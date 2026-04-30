@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# nqx-routine — DeepSeek V4 Flash on the project, primed for routine tasks.
+set -e
+PROJECT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$PROJECT"
+
+cat <<'BANNER'
+═══════════════════════════════════════════════════════════════════
+ NQX-Core / DEEPSEEK Flash — ROUTINE mode
+ Рутина → scenarios → production-readiness
+
+ ⚡ Первое сообщение для отправки:
+ ─────────────────────────────────
+ Прочитай docs/PRD.md, audits/prompts/routine.md, audits/prompts/scenarios.md.
+ Бери первый незакрытый [ ] из routine.md (если есть), потом из scenarios.md.
+ Минимальный diff → pytest tests -q → [x] → следующий.
+ Не лезь в T*-задачи (heavy) и D*-задачи (demo от Claude).
+ Без docstrings, без рефакторов вне таска.
+ ─────────────────────────────────
+═══════════════════════════════════════════════════════════════════
+BANNER
+echo
+exec env DEEPSEEK_MODEL=deepseek-v4-flash /home/user/.local/bin/deepseek-cli "$@"

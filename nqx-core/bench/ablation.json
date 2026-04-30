@@ -1,0 +1,218 @@
+[
+  {
+    "rotation": "phi",
+    "dim": 64,
+    "bits": 2,
+    "rmse": 1.0102156400680542
+  },
+  {
+    "rotation": "phi",
+    "dim": 64,
+    "bits": 3,
+    "rmse": 0.4254213869571686
+  },
+  {
+    "rotation": "phi",
+    "dim": 64,
+    "bits": 4,
+    "rmse": 0.19912227988243103
+  },
+  {
+    "rotation": "phi",
+    "dim": 128,
+    "bits": 2,
+    "rmse": 0.8406529426574707
+  },
+  {
+    "rotation": "phi",
+    "dim": 128,
+    "bits": 3,
+    "rmse": 0.3662053644657135
+  },
+  {
+    "rotation": "phi",
+    "dim": 128,
+    "bits": 4,
+    "rmse": 0.17130428552627563
+  },
+  {
+    "rotation": "phi",
+    "dim": 256,
+    "bits": 2,
+    "rmse": 0.7601059675216675
+  },
+  {
+    "rotation": "phi",
+    "dim": 256,
+    "bits": 3,
+    "rmse": 0.3310036063194275
+  },
+  {
+    "rotation": "phi",
+    "dim": 256,
+    "bits": 4,
+    "rmse": 0.15470778942108154
+  },
+  {
+    "rotation": "random",
+    "dim": 64,
+    "bits": 2,
+    "rmse": 0.7182444334030151
+  },
+  {
+    "rotation": "random",
+    "dim": 64,
+    "bits": 3,
+    "rmse": 0.3027338683605194
+  },
+  {
+    "rotation": "random",
+    "dim": 64,
+    "bits": 4,
+    "rmse": 0.14135144650936127
+  },
+  {
+    "rotation": "random",
+    "dim": 128,
+    "bits": 2,
+    "rmse": 0.684138298034668
+  },
+  {
+    "rotation": "random",
+    "dim": 128,
+    "bits": 3,
+    "rmse": 0.2882387638092041
+  },
+  {
+    "rotation": "random",
+    "dim": 128,
+    "bits": 4,
+    "rmse": 0.13462106883525848
+  },
+  {
+    "rotation": "random",
+    "dim": 256,
+    "bits": 2,
+    "rmse": 0.6751617789268494
+  },
+  {
+    "rotation": "random",
+    "dim": 256,
+    "bits": 3,
+    "rmse": 0.2854219377040863
+  },
+  {
+    "rotation": "random",
+    "dim": 256,
+    "bits": 4,
+    "rmse": 0.13303029537200928
+  },
+  {
+    "rotation": "hadamard",
+    "dim": 64,
+    "bits": 2,
+    "rmse": 0.6885434985160828
+  },
+  {
+    "rotation": "hadamard",
+    "dim": 64,
+    "bits": 3,
+    "rmse": 0.2907564342021942
+  },
+  {
+    "rotation": "hadamard",
+    "dim": 64,
+    "bits": 4,
+    "rmse": 0.13585487008094788
+  },
+  {
+    "rotation": "hadamard",
+    "dim": 128,
+    "bits": 2,
+    "rmse": 0.6776217818260193
+  },
+  {
+    "rotation": "hadamard",
+    "dim": 128,
+    "bits": 3,
+    "rmse": 0.28645116090774536
+  },
+  {
+    "rotation": "hadamard",
+    "dim": 128,
+    "bits": 4,
+    "rmse": 0.13358740508556366
+  },
+  {
+    "rotation": "hadamard",
+    "dim": 256,
+    "bits": 2,
+    "rmse": 0.671433687210083
+  },
+  {
+    "rotation": "hadamard",
+    "dim": 256,
+    "bits": 3,
+    "rmse": 0.2845105826854706
+  },
+  {
+    "rotation": "hadamard",
+    "dim": 256,
+    "bits": 4,
+    "rmse": 0.1326536238193512
+  },
+  {
+    "rotation": "none",
+    "dim": 64,
+    "bits": 2,
+    "rmse": 1.122910976409912
+  },
+  {
+    "rotation": "none",
+    "dim": 64,
+    "bits": 3,
+    "rmse": 0.4659392237663269
+  },
+  {
+    "rotation": "none",
+    "dim": 64,
+    "bits": 4,
+    "rmse": 0.2176513969898224
+  },
+  {
+    "rotation": "none",
+    "dim": 128,
+    "bits": 2,
+    "rmse": 0.8850575685501099
+  },
+  {
+    "rotation": "none",
+    "dim": 128,
+    "bits": 3,
+    "rmse": 0.385240375995636
+  },
+  {
+    "rotation": "none",
+    "dim": 128,
+    "bits": 4,
+    "rmse": 0.17976559698581696
+  },
+  {
+    "rotation": "none",
+    "dim": 256,
+    "bits": 2,
+    "rmse": 0.7828412652015686
+  },
+  {
+    "rotation": "none",
+    "dim": 256,
+    "bits": 3,
+    "rmse": 0.3417517840862274
+  },
+  {
+    "rotation": "none",
+    "dim": 256,
+    "bits": 4,
+    "rmse": 0.15952715277671814
+  }
+]

@@ -1,0 +1,15 @@
+; MXFP4 quantization round-trip on a batch of dim=128 vectors.
+; Pre-rotates with golden Givens, converts to polar, then MX-blocks (size 32).
+LDV V0, [0x0]
+GVNS V0, 0
+GVNS V0, 1
+GVNS V0, 2
+POLAR V0
+MXPACK V0, MXFP4
+MXUNPACK V0, MXFP4
+IPOLAR V0
+GVNS_INV V0, 2
+GVNS_INV V0, 1
+GVNS_INV V0, 0
+STV V0, [0x10000000]
+HALT
