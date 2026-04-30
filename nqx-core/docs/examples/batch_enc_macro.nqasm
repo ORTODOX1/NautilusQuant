@@ -1,0 +1,6 @@
+; Example 1: batched ENC macro — encode 16 vectors in one instruction
+; ENC internally does LDV+GVNSx3+POLAR+QUANT+QJL+PACK3+STV for each vector.
+; Max throughput: 1 vector/cycle (steady-state), single instruction.
+; Best for: large uniform batches where all vectors use same quant params.
+ENC [0x00000000], [0x10000000], 16
+HALT

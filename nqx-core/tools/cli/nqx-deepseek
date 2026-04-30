@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# DeepSeek V4 Pro CLI scoped to the NQX-Core project.
+set -e
+PROJECT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$PROJECT"
+
+echo "═══════════════════════════════════════════════════════════"
+echo " NQX-Core / DeepSeek V4 Pro CLI"
+echo " WorkDir: $PROJECT"
+echo " Override model:  DEEPSEEK_MODEL=deepseek-v4-flash $0"
+echo "═══════════════════════════════════════════════════════════"
+echo
+exec /home/user/.local/bin/deepseek-cli "$@"

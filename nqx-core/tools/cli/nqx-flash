@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# DeepSeek V4 Flash (cheap, fast) scoped to the NQX-Core project.
+set -e
+PROJECT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$PROJECT"
+
+echo "═══════════════════════════════════════════════════════════"
+echo " NQX-Core / DeepSeek V4 Flash CLI (cheap)"
+echo " WorkDir: $PROJECT"
+echo "═══════════════════════════════════════════════════════════"
+echo
+exec env DEEPSEEK_MODEL=deepseek-v4-flash /home/user/.local/bin/deepseek-cli "$@"

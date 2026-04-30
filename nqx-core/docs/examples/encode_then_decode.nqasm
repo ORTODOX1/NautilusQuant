@@ -1,0 +1,12 @@
+; Example 3: encode then decode round-trip
+; ENC processes cnt vectors, writes packed bytes to HBM at [dst].
+; DEC reads the EncodeResult state and reconstructs Cartesian vectors.
+; Combined: input[0..cnt-1] -> compressed -> reconstructed at [dst+offset].
+; Useful for validation: measure RMSE between input and decoded.
+
+; Save original vector info (emulator stores result internally)
+ENC [0x00000000], [0x10000000], 1
+
+; DEC reconstructs from the internal EncodeResult
+DEC [0x10000000], [0x20000000], 1
+HALT

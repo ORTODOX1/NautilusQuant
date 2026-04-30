@@ -1,0 +1,15 @@
+; --- Full per-vector NautilusQuant decode for dim=128 ---
+; Reads packed payload from HBM, unpacks 3+1 bits, dequantizes,
+; converts polar->Cartesian, applies inverse Givens (L3 -> L2 -> L1).
+
+LDV     V0, [0x10000000]    ; load packed bytes -> SRAM_in
+UNPACK3 V0                  ; unpack into V0 (q indices side-band)
+DEQUANT V0, 3               ; reconstruct polar
+IPOLAR  V0                  ; (r, theta) -> (x, y)
+
+GVNS_INV V0, 2              ; inverse Layer 3
+GVNS_INV V0, 1              ; inverse Layer 2
+GVNS_INV V0, 0              ; inverse Layer 1
+
+STV     V0, [0x00000000]    ; back to HBM as FP16
+HALT

@@ -1,0 +1,21 @@
+# Yosys generic synthesis of NQX-Core RTL.
+# Run via `make synth` in this directory.
+
+read_verilog -sv ../givens_lane.sv
+read_verilog -sv ../golden_rom.sv
+read_verilog -sv ../polar_unit.sv
+read_verilog -sv ../quant_unit.sv
+read_verilog -sv ../nqx_top.sv
+
+hierarchy -check -top nqx_top
+
+# Generic synthesis: lower to gate-level netlist.
+synth -top nqx_top -flatten
+
+# Map to a generic library (no PDK required).
+abc -fast
+
+stat -top nqx_top -tech cmos
+
+write_verilog -noattr nqx_top_synth.v
+write_json nqx_top_synth.json

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+
+echo "=== Task progress ==="
+
+for f in audits/prompts/heavy.md audits/prompts/routine.md; do
+    total=$(grep -cE '^-\s+\[[ x]\]' "$DIR/$f" 2>/dev/null || echo 0)
+    done=$(grep -cE '^-\s+\[x\]' "$DIR/$f" 2>/dev/null || echo 0)
+    pending=$((total - done))
+    echo "  $f: $done/$total done ($pending pending)"
+done
+
+echo ""
+echo "=== Recent results ==="
+if ls "$DIR/audits/results/"*.* 2>/dev/null; then
+    ls -1t "$DIR/audits/results/" | head -5 | sed 's/^/  /'
+else
+    echo "  (no results yet)"
+fi
+
+echo ""
+echo "=== pytest ==="
+python -m pytest tests -q --tb=no --ignore=tests/test_mx_unit.py 2>&1 || true

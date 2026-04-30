@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# nqx-debug-jtag — software model of the JTAG debug interface.
+# Walks the TAP, dumps state, exercises READ_PC / READ_VRF / READ_SRF / READ_CSR.
+set -e
+PROJECT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$PROJECT"
+exec python - "$@" <<'PY'
+import argparse, json, sys
+
+from nqx.assembler import assemble
+from nqx.constants import NQXConfig
+from nqx.cpu import NQXCore
+from nqx.jtag import IR, JTAGDebugger, NQX_IDCODE, TAP, TAPState, walk_full_state_space
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--dim", type=int, default=128)
+    ap.add_argument("--vrf", type=int, default=0)
+    args = ap.parse_args()
+
+    cfg = NQXConfig(dim=args.dim)
+    core = NQXCore(cfg)
+    core.execute_program(assemble("LDV V0, [0x0]\nGVNS V0, 0\nHALT"))
+
+    dbg = JTAGDebugger()
+    dbg.attach(core)
+
+    seq = walk_full_state_space()
+    visited = set(seq)
+    print(f"TAP states visited: {len(visited)}/{len(TAPState)}")
+    print(f"IDCODE: 0x{dbg.execute_ir(int(IR.IDCODE)):08x} (expect 0x{NQX_IDCODE:08x})")
+    print(f"PC:      {dbg.execute_ir(int(IR.READ_PC))}")
+    print(f"VRF[{args.vrf}] sample (×1e6): {dbg.execute_ir(int(IR.READ_VRF), payload=args.vrf)}")
+    print(f"SRF[0]: {dbg.execute_ir(int(IR.READ_SRF), payload=0)}")
+    print(f"CSR[cycle_count]: {dbg.execute_ir(int(IR.READ_CSR), payload=0)}")
+    print(f"step → PC: {dbg.execute_ir(int(IR.SINGLE_STEP))}")
+    print(f"breakpoint set 0x42: {dbg.execute_ir(int(IR.BREAKPOINT_SET), payload=0x42)}")
+    print(f"breakpoint clear 0x42: {dbg.execute_ir(int(IR.BREAKPOINT_CLEAR), payload=0x42)}")
+
+
+main()
+PY

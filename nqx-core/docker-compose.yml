@@ -1,0 +1,35 @@
+services:
+  nqx-cpu:
+    build:
+      context: .
+      dockerfile: Dockerfile.cpu
+    image: nqx-server:cpu
+    ports:
+      - "8000:8000"
+    environment:
+      NQX_BACKEND: cpu
+      NQX_DIM: "128"
+      NQX_BITS: "3"
+    restart: unless-stopped
+    profiles: [cpu]
+
+  nqx-gpu:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nqx-server:gpu
+    ports:
+      - "8000:8000"
+    environment:
+      NQX_BACKEND: auto
+      NQX_DIM: "128"
+      NQX_BITS: "3"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+    profiles: [gpu]

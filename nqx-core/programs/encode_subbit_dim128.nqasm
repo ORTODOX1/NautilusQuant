@@ -1,0 +1,10 @@
+; Sub-bit split-quant encode: radius 3 bit + angle 2 bit.
+; Data flows: HBM → VRF → rotate → polar → SUBBIT_ENC → STV.
+LDV V0, [0x0]
+GVNS V0, 0
+GVNS V0, 1
+GVNS V0, 2
+POLAR V0
+SUBBIT_ENC V0, 3, 2
+STV V0, [0x10000000]
+HALT

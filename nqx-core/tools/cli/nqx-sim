@@ -1,0 +1,44 @@
+#!/usr/bin/env python3
+"""Run .nqasm program on the NQX emulator."""
+import sys, os, json
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "../.."))
+import numpy as np
+from nqx.assembler import assemble
+from nqx.cpu import NQXCore
+from nqx.constants import NQXConfig
+
+def main():
+    import argparse
+    ap = argparse.ArgumentParser(description="NQX program simulator")
+    ap.add_argument("program", help=".nqasm or .bin file")
+    ap.add_argument("--dim", type=int, default=128, help="vector dimension")
+    ap.add_argument("--bits", type=int, default=3, help="quantization bits")
+    ap.add_argument("--input", help="HBM input .npy (count, dim)")
+    ap.add_argument("--json", help="output results as JSON", action="store_true")
+    args = ap.parse_args()
+
+    cfg = NQXConfig(dim=args.dim, bits=args.bits)
+    core = NQXCore(cfg)
+
+    if args.program.endswith(".bin"):
+        from nqx.isa import unpack_program
+        with open(args.program, "rb") as f:
+            prog = unpack_program(f.read())
+    else:
+        with open(args.program) as f:
+            prog = assemble(f.read())
+
+    if args.input:
+        x = np.load(args.input)
+        core.load_vectors_to_hbm(0, x)
+
+    result = core.execute_program(prog)
+    print(f"halted: {result['halted']}")
+    print(f"cycles: {core.cycles.total}")
+    print(f"energy: {core.energy.total_nj():.2f} nJ")
+
+    if args.json:
+        print(json.dumps(result, default=str))
+
+if __name__ == "__main__":
+    main()

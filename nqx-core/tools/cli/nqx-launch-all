@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# nqx-launch-all — открывает два независимых окна kitty:
+#   1) NQX Heavy   — Claude на heavy.md (тяжёлые задачи, твои токены)
+#   2) NQX Routine — DeepSeek V4 Flash на routine.md (рутина, дёшево)
+# Окна — разные процессы kitty, разные сессии CLI, разные оттенки фона,
+# чтобы визуально и процессно ничему не пересекаться.
+set -e
+
+PROJECT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+SCRIPT_DIR="$PROJECT/tools/cli"
+
+if ! command -v kitty >/dev/null 2>&1; then
+    echo "kitty terminal not found. Install: sudo pacman -S kitty"
+    exit 1
+fi
+
+# Первое окно: HEAVY (Claude) — тёмно-зелёный фон, левая половина
+kitty \
+    --class nqx-heavy \
+    --title "NQX Heavy · Claude" \
+    --working-directory="$PROJECT" \
+    --override "background=#0a1a14" \
+    --override "background_opacity=0.97" \
+    --override "tab_bar_style=hidden" \
+    --override "font_size=12.0" \
+    --hold \
+    bash -lc "$SCRIPT_DIR/nqx-heavy" \
+    >/dev/null 2>&1 &
+HEAVY_PID=$!
+
+sleep 0.4
+
+# Второе окно: ROUTINE (DeepSeek Flash) — тёмно-фиолетовый фон, правая половина
+kitty \
+    --class nqx-routine \
+    --title "NQX Routine · DeepSeek Flash" \
+    --working-directory="$PROJECT" \
+    --override "background=#1a0f1f" \
+    --override "background_opacity=0.97" \
+    --override "tab_bar_style=hidden" \
+    --override "font_size=12.0" \
+    --hold \
+    bash -lc "$SCRIPT_DIR/nqx-routine" \
+    >/dev/null 2>&1 &
+ROUTINE_PID=$!
+
+# Detach — родительский скрипт сразу завершается, окна живут сами по себе
+disown "$HEAVY_PID" 2>/dev/null || true
+disown "$ROUTINE_PID" 2>/dev/null || true
+
+echo "Launched:"
+echo "  HEAVY   (PID $HEAVY_PID)  → Claude on audits/prompts/heavy.md"
+echo "  ROUTINE (PID $ROUTINE_PID) → DeepSeek Flash on audits/prompts/routine.md"

@@ -1,0 +1,10 @@
+; MXFP4 encode: rotate, polar, then MX-block quantize (block size 32).
+; Data flows: HBM → VRF → rotate → polar → MXPACK → STV to HBM.
+LDV V0, [0x0]
+GVNS V0, 0
+GVNS V0, 1
+GVNS V0, 2
+POLAR V0
+MXPACK V0, MXFP4
+STV V0, [0x10000000]
+HALT
