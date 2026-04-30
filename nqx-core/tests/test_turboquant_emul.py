@@ -6,16 +6,16 @@ sys.path.insert(0, str(REPO))
 
 import numpy as np
 
-from nqx.constants import NQXConfig
 from demos.turboquant_emul import (
-    encode,
     decode,
+    encode,
     encode_cycles,
     encode_energy_pj,
     random_orthogonal,
     rmse,
     state_size_bytes,
 )
+from nqx.constants import NQXConfig
 
 
 def test_random_orthogonal_is_orthogonal():

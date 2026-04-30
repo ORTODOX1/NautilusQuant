@@ -2,8 +2,7 @@ import numpy as np
 import pytest
 
 from nqx.constants import NQXConfig
-from nqx.mx_unit import MXQuantizer, MX_FORMATS
-
+from nqx.mx_unit import MX_FORMATS, MXQuantizer
 
 RMSE_BUDGET = {
     "MXFP4": 0.1,

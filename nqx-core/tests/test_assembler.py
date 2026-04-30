@@ -1,7 +1,7 @@
 import pytest
 
-from nqx.assembler import assemble, AssemblyError
-from nqx.isa import encode_instruction, decode_instruction, pack_program, unpack_program
+from nqx.assembler import AssemblyError, assemble
+from nqx.isa import decode_instruction, encode_instruction, pack_program, unpack_program
 
 ALL_MNEMONICS = [
     ("NOP", "NOP"),

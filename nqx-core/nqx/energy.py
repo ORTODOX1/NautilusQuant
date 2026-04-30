@@ -7,7 +7,6 @@ from typing import Dict
 
 from nqx.constants import NQXConfig
 
-
 PRNG_PJ_PER_BYTE = 0.4
 RANDOM_T_FETCH_BYTES_PER_LAYER = 2  # FP16 per matrix entry
 

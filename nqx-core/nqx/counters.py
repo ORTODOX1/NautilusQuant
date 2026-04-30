@@ -4,7 +4,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, List
 
-
 COUNTER_NAMES: List[str] = [
     "cycle_count",
     "stall_cycles",

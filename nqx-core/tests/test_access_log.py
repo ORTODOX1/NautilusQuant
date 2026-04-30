@@ -13,8 +13,9 @@ def test_access_log_writes_lines():
     if os.path.exists(LOG_PATH):
         os.remove(LOG_PATH)
 
-    from server.api import app
     from starlette.testclient import TestClient
+
+    from server.api import app
     client = TestClient(app)
 
     # 5 requests hitting various endpoints
@@ -23,13 +24,14 @@ def test_access_log_writes_lines():
     client.get("/")
 
     import numpy as np
+
     from nqx.constants import NQXConfig
     from nqx.cpu import NQXCore
     cfg = NQXConfig(dim=128, bits=3)
     core = NQXCore(cfg)
     rng = np.random.default_rng(42)
     x = rng.standard_normal((4, 128)).astype(np.float32)
-    enc = core.encode(x)
+    core.encode(x)
     payload = {
         "vectors": x.tolist(),
         "dim": 128,

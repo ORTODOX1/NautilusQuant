@@ -32,10 +32,10 @@ def generate_llama3_kv(
     base[..., half:] -= 0.5  # negative bias
 
     # Outlier dimensions: ~6 per head with 10x magnitude
-    for l in range(n_layers):
+    for layer_idx in range(n_layers):
         for h in range(n_heads):
             outlier_cols = rng.integers(0, dim, size=outlier_dims_per_head)
-            base[l, :, h, :, outlier_cols] *= 10.0
+            base[layer_idx, :, h, :, outlier_cols] *= 10.0
 
     return base
 

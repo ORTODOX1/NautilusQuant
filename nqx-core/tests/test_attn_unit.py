@@ -4,7 +4,7 @@ from nqx.assembler import assemble
 from nqx.constants import NQXConfig
 from nqx.cpu import NQXCore
 from nqx.functional_units import AttentionUnit
-from nqx.isa import Opcode, Instruction, encode_instruction, decode_instruction
+from nqx.isa import Instruction, Opcode, decode_instruction, encode_instruction
 
 
 def _to_polar(x: np.ndarray) -> np.ndarray:

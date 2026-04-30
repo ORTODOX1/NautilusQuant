@@ -25,7 +25,6 @@ def generate_adversarial_golden_angle(n_vectors: int, dim: int):
 
 def test_adversarial_rmse_bounded():
     """Test from this module: even adversarial inputs stay below threshold."""
-    import pytest
     from nqx.constants import NQXConfig
     from nqx.cpu import NQXCore
 

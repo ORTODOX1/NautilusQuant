@@ -23,7 +23,7 @@ def test_run_demo_finishes_under_30_seconds():
 def test_side_by_side_table_has_all_metrics():
     text = (REPO / "demos" / "side_by_side.md").read_text() if (REPO / "demos" / "side_by_side.md").exists() else ""
     if not text:
-        result = subprocess.run(
+        subprocess.run(
             [sys.executable, str(REPO / "demos" / "side_by_side.py"),
              "--vectors", "256", "--runs", "5"],
             capture_output=True, text=True, check=True,

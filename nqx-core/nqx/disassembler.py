@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 import argparse
-import sys
 from pathlib import Path
-from typing import Iterable, List
+from typing import Iterable
 
 from nqx.isa import Instruction, Opcode, unpack_program
 from nqx.mx_unit import MX_FORMAT_BY_INDEX

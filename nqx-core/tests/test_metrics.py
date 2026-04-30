@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from server.api import app
 from starlette.testclient import TestClient
+
+from server.api import app
 
 client = TestClient(app)
 
@@ -20,11 +21,12 @@ def test_metrics_endpoint():
 
 def test_metrics_counters_increment():
     import numpy as np
+
     from nqx.constants import NQXConfig
     from nqx.cpu import NQXCore
 
     cfg = NQXConfig(dim=128, bits=3)
-    core = NQXCore(cfg)
+    NQXCore(cfg)
     rng = np.random.default_rng(42)
     x = rng.standard_normal((4, 128)).astype(np.float32)
     payload = {"vectors": x.tolist(), "dim": 128, "bits": 3}

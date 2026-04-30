@@ -11,9 +11,9 @@ from nqx.constants import NQXConfig
 from nqx.cpu import NQXCore
 from nqx.jtag import (
     IR,
-    JTAGDebugger,
     NQX_IDCODE,
     TAP,
+    JTAGDebugger,
     TAPState,
     walk_full_state_space,
 )

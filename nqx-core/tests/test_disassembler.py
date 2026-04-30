@@ -7,8 +7,7 @@ sys.path.insert(0, str(REPO))
 
 from nqx.assembler import assemble
 from nqx.disassembler import disassemble, disassemble_bytes, disassemble_one
-from nqx.isa import Instruction, Opcode, encode_instruction, pack_program, unpack_program
-
+from nqx.isa import Instruction, Opcode, encode_instruction, pack_program
 
 SAMPLE_SRC = """
 LDV V0, [0x0]

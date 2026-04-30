@@ -4,9 +4,9 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 
+from bench.energy_proof import measure_phi, measure_random
 from nqx.constants import NQXConfig
 from nqx.energy import random_rotation_energy_pj
-from bench.energy_proof import measure_phi, measure_random
 
 
 def test_random_rotation_energy_grows_quadratic_in_dim():

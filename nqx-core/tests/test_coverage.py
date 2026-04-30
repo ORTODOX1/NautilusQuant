@@ -5,8 +5,7 @@ REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 
 from nqx.assembler import assemble
-from nqx.coverage import Coverage, render_markdown, trace_program, write_report
-from nqx.isa import Opcode
+from nqx.coverage import Coverage, trace_program, write_report
 
 
 def test_trace_records_opcode_counts():

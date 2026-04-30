@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from server.api import app
 from starlette.testclient import TestClient
+
+from server.api import app
 
 
 def test_invalid_shape_structured_error():

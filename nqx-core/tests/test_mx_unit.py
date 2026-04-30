@@ -4,8 +4,8 @@ import pytest
 from nqx.assembler import assemble
 from nqx.constants import NQXConfig
 from nqx.cpu import NQXCore
-from nqx.isa import Opcode, encode_instruction, decode_instruction, Instruction
-from nqx.mx_unit import MXQuantizer, MX_FORMATS, MX_FORMAT_BY_INDEX
+from nqx.isa import Instruction, Opcode, decode_instruction, encode_instruction
+from nqx.mx_unit import MX_FORMAT_BY_INDEX, MX_FORMATS, MXQuantizer
 
 
 def _ref_mx_quantize(x: np.ndarray, format_name: str, block_size: int = 32) -> np.ndarray:

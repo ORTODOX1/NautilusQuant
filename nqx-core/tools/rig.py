@@ -9,7 +9,7 @@ import sys
 import traceback
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List
+from typing import List
 
 repo_root = Path(__file__).resolve().parent.parent
 if str(repo_root) not in sys.path:
@@ -23,7 +23,6 @@ from nqx.coverage import Coverage, trace_program, write_report
 from nqx.cpu import NQXCore
 from nqx.isa import Opcode
 from nqx.mx_unit import MX_FORMAT_BY_INDEX
-
 
 N_VECTOR_REGS = 16
 LDV_BATCH = 4

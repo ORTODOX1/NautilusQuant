@@ -1,0 +1,17 @@
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["E402"]
+"tools/**" = ["E402"]
+"bench/**" = ["E402"]
+"demos/**" = ["E402"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311", "py312"]

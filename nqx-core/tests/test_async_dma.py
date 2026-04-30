@@ -3,7 +3,7 @@ import numpy as np
 from nqx.assembler import assemble
 from nqx.constants import NQXConfig
 from nqx.cpu import NQXCore
-from nqx.isa import Opcode, Instruction, encode_instruction, decode_instruction
+from nqx.isa import Instruction, Opcode, decode_instruction, encode_instruction
 
 
 def _make_core_with_data(n_vec=4096, dim=128):

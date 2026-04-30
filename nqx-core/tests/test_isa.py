@@ -1,14 +1,14 @@
 import pytest
 
+from nqx.assembler import AssemblyError, assemble
 from nqx.isa import (
-    Opcode,
     Instruction,
-    encode_instruction,
+    Opcode,
     decode_instruction,
+    encode_instruction,
     pack_program,
     unpack_program,
 )
-from nqx.assembler import assemble, AssemblyError
 
 
 def test_encode_decode_roundtrip_r_form():

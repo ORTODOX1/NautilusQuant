@@ -1,7 +1,6 @@
 import math
 
-
-from nqx.constants import NQXConfig, GOLDEN_ANGLE
+from nqx.constants import GOLDEN_ANGLE, NQXConfig
 from nqx.lut import GoldenAngleLUT
 
 

@@ -17,7 +17,7 @@ from __future__ import annotations
 import re
 from typing import List
 
-from nqx.isa import Opcode, Instruction
+from nqx.isa import Instruction, Opcode
 from nqx.mx_unit import MX_FORMAT_BY_INDEX
 
 

@@ -7,7 +7,7 @@ import math
 
 import numpy as np
 
-from nqx.constants import NQXConfig, GOLDEN_ANGLE, PHI
+from nqx.constants import GOLDEN_ANGLE, PHI, NQXConfig
 from nqx.cpu import NQXCore
 from nqx.lut import GoldenAngleLUT
 

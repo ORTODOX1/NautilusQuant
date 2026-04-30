@@ -18,7 +18,7 @@ from server.api import app
 @pytest.mark.skipif(httpx is None, reason="httpx not installed")
 def test_concurrent_encode():
     async def run():
-        from httpx import AsyncClient, ASGITransport
+        from httpx import ASGITransport, AsyncClient
 
         transport = ASGITransport(app=app)
         base_url = "http://test"

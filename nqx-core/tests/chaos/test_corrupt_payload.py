@@ -5,12 +5,11 @@ from __future__ import annotations
 import base64
 
 import numpy as np
-import pytest
+from starlette.testclient import TestClient
 
 from nqx.constants import NQXConfig
 from nqx.cpu import NQXCore
 from server.api import app
-from starlette.testclient import TestClient
 
 client = TestClient(app)
 

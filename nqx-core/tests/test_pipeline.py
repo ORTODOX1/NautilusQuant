@@ -1,8 +1,8 @@
 import numpy as np
 
+from nqx.assembler import assemble
 from nqx.constants import NQXConfig
 from nqx.cpu import NQXCore
-from nqx.assembler import assemble
 
 
 def test_program_executes_to_halt():

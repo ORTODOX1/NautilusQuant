@@ -8,22 +8,22 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 
 from nqx.constants import NQXConfig
-from nqx.lut import GoldenAngleLUT
-from nqx.memory import HBM, SRAM, VectorRegisterFile, ScalarRegisterFile
-from nqx.functional_units import (
-    GivensUnit,
-    PolarUnit,
-    QuantUnit,
-    QJLUnit,
-    PackUnit,
-    AttentionUnit,
-)
-from nqx.mx_unit import MXQuantizer, MX_FORMAT_BY_INDEX
-from nqx.subbit_unit import SubBitUnit
-from nqx.pipeline import Pipeline, CycleCounter
-from nqx.energy import EnergyModel
-from nqx.isa import Opcode, Instruction
 from nqx.counters import PerfCounters
+from nqx.energy import EnergyModel
+from nqx.functional_units import (
+    AttentionUnit,
+    GivensUnit,
+    PackUnit,
+    PolarUnit,
+    QJLUnit,
+    QuantUnit,
+)
+from nqx.isa import Instruction, Opcode
+from nqx.lut import GoldenAngleLUT
+from nqx.memory import HBM, SRAM, ScalarRegisterFile, VectorRegisterFile
+from nqx.mx_unit import MX_FORMAT_BY_INDEX, MXQuantizer
+from nqx.pipeline import CycleCounter, Pipeline
+from nqx.subbit_unit import SubBitUnit
 
 
 @dataclass
