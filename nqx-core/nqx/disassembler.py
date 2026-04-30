@@ -1,4 +1,5 @@
 """Disassemble NQ-ASM bytecode → human-readable assembly."""
+
 from __future__ import annotations
 
 import argparse
@@ -47,7 +48,9 @@ def disassemble_one(ins: Instruction) -> str:
         return f"PACK3 V{ins.rd}, V{ins.rs1}"
 
     if op in (Opcode.MXPACK, Opcode.MXUNPACK):
-        fmt = MX_FORMAT_BY_INDEX[ins.rs1] if 0 <= ins.rs1 < len(MX_FORMAT_BY_INDEX) else str(ins.rs1)
+        fmt = (
+            MX_FORMAT_BY_INDEX[ins.rs1] if 0 <= ins.rs1 < len(MX_FORMAT_BY_INDEX) else str(ins.rs1)
+        )
         return f"{op.name} V{ins.rd}, {fmt}"
 
     if op == Opcode.SUBBIT_ENC:

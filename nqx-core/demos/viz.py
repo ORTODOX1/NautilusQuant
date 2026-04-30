@@ -1,4 +1,5 @@
 """ASCII visualisations for the demo suite. No matplotlib."""
+
 from __future__ import annotations
 
 import argparse
@@ -15,7 +16,6 @@ import numpy as np
 from nqx.constants import NQXConfig
 from nqx.cpu import NQXCore
 from demos.turboquant_emul import encode as turbo_encode
-
 
 BAR = "█"
 
@@ -65,23 +65,23 @@ def render_latency_hist(label: str, lat: list, bins: int = 12, width: int = 40) 
 def render_cycle_breakdown(width: int = 30) -> str:
     cfg = NQXConfig(dim=128)
     nqx = {
-        "load":   1,
+        "load": 1,
         "rotate": 3 * cfg.cycles_givens_layer,
-        "polar":  cfg.cycles_polar,
-        "quant":  cfg.cycles_quant_minmax + cfg.cycles_quant_round,
-        "qjl":    cfg.cycles_qjl,
-        "pack":   cfg.cycles_pack,
-        "store":  1,
+        "polar": cfg.cycles_polar,
+        "quant": cfg.cycles_quant_minmax + cfg.cycles_quant_round,
+        "qjl": cfg.cycles_qjl,
+        "pack": cfg.cycles_pack,
+        "store": 1,
     }
     turbo = {
-        "load":   1,
-        "prng":   4 * cfg.dim * cfg.dim // 100,  # display scale-down
+        "load": 1,
+        "prng": 4 * cfg.dim * cfg.dim // 100,  # display scale-down
         "rotate": cfg.dim,
-        "polar":  cfg.cycles_polar,
-        "quant":  cfg.cycles_quant_minmax + cfg.cycles_quant_round,
-        "qjl":    cfg.cycles_qjl,
-        "pack":   cfg.cycles_pack,
-        "store":  1,
+        "polar": cfg.cycles_polar,
+        "quant": cfg.cycles_quant_minmax + cfg.cycles_quant_round,
+        "qjl": cfg.cycles_qjl,
+        "pack": cfg.cycles_pack,
+        "store": 1,
     }
     max_total = max(sum(nqx.values()), sum(turbo.values()))
     lines = ["Cycle breakdown by stage (lower is better)", ""]

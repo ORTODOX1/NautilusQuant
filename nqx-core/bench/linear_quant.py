@@ -17,7 +17,7 @@ from nqx.cpu import NQXCore
 
 
 def uniform_quant(x: np.ndarray, bits: int) -> np.ndarray:
-    levels = 2 ** bits
+    levels = 2**bits
     mins = x.min(axis=0)
     maxs = x.max(axis=0)
     ranges = np.maximum(maxs - mins, 1e-8)
@@ -27,7 +27,7 @@ def uniform_quant(x: np.ndarray, bits: int) -> np.ndarray:
 
 
 def lloyd_max_1d(samples: np.ndarray, bits: int, iters: int = 50) -> np.ndarray:
-    levels = 2 ** bits
+    levels = 2**bits
     lo, hi = float(samples.min()), float(samples.max())
     if hi - lo < 1e-9:
         return np.full(samples.shape, lo, dtype=np.float32)
@@ -114,19 +114,20 @@ def format_markdown(rows, dims, bits_list) -> str:
     lines.append("")
     for rotation in ("phi", "none"):
         lines.append(f"### rotation = `{rotation}`")
-        header = "| dim \\ bits | " + " | ".join(
-            f"{b}-bit (linear / LM / δ%)" for b in bits_list
-        ) + " |"
+        header = (
+            "| dim \\ bits | " + " | ".join(f"{b}-bit (linear / LM / δ%)" for b in bits_list) + " |"
+        )
         sep = "|---|" + "|".join(["---:"] * len(bits_list)) + "|"
         lines.append(header)
         lines.append(sep)
         for dim in dims:
             cells = []
             for bits in bits_list:
-                row = next(r for r in rows
-                           if r["rotation"] == rotation
-                           and r["dim"] == dim
-                           and r["bits"] == bits)
+                row = next(
+                    r
+                    for r in rows
+                    if r["rotation"] == rotation and r["dim"] == dim and r["bits"] == bits
+                )
                 cells.append(
                     f"{row['rmse_uniform']:.4f} / "
                     f"{row['rmse_lloyd_max']:.4f} / "
@@ -134,12 +135,8 @@ def format_markdown(rows, dims, bits_list) -> str:
                 )
             lines.append(f"| {dim} | " + " | ".join(cells) + " |")
         lines.append("")
-    avg_phi_delta = np.mean([
-        r["delta_pct"] for r in rows if r["rotation"] == "phi"
-    ])
-    avg_none_delta = np.mean([
-        r["delta_pct"] for r in rows if r["rotation"] == "none"
-    ])
+    avg_phi_delta = np.mean([r["delta_pct"] for r in rows if r["rotation"] == "phi"])
+    avg_none_delta = np.mean([r["delta_pct"] for r in rows if r["rotation"] == "none"])
     lines.append("## Headline numbers")
     lines.append("")
     lines.append(f"- Average δ after φ-rotation: **{avg_phi_delta:+.2f}%**")

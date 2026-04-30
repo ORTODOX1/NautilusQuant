@@ -1,4 +1,5 @@
 """Llama-3-70B scaling projection. No model loading — pure arithmetic."""
+
 from __future__ import annotations
 
 import argparse
@@ -15,7 +16,9 @@ def kv_cache_bytes_fp16(n_layers: int, n_heads: int, dim: int, ctx: int, kv_fact
     return n_layers * n_heads * ctx * dim * 2 * kv_factor
 
 
-def kv_cache_bytes_nqx(n_layers: int, n_heads: int, dim: int, ctx: int, bits: int = 3, kv_factor: int = 2) -> int:
+def kv_cache_bytes_nqx(
+    n_layers: int, n_heads: int, dim: int, ctx: int, bits: int = 3, kv_factor: int = 2
+) -> int:
     bits_per_value = bits + 1
     bytes_per_vec = (dim * bits_per_value + 7) // 8
     return n_layers * n_heads * ctx * bytes_per_vec * kv_factor
@@ -40,8 +43,8 @@ def fmt_bytes(n: int) -> str:
 def run(model: str = "Llama-3-70B"):
     cfg = {
         "Llama-3-70B": {"layers": 80, "heads": 64, "dim": 128, "ctx": 128 * 1024},
-        "Llama-3-8B":  {"layers": 32, "heads": 32, "dim": 128, "ctx": 128 * 1024},
-        "Llama-3-405B":{"layers": 126, "heads": 128, "dim": 128, "ctx": 128 * 1024},
+        "Llama-3-8B": {"layers": 32, "heads": 32, "dim": 128, "ctx": 128 * 1024},
+        "Llama-3-405B": {"layers": 126, "heads": 128, "dim": 128, "ctx": 128 * 1024},
     }[model]
 
     fp16 = kv_cache_bytes_fp16(cfg["layers"], cfg["heads"], cfg["dim"], cfg["ctx"])

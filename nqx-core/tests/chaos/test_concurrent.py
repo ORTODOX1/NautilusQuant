@@ -27,6 +27,7 @@ def test_concurrent_encode():
         payload = {"vectors": x.tolist(), "dim": 128, "bits": 3}
 
         async with AsyncClient(transport=transport, base_url=base_url) as client:
+
             async def do_encode():
                 resp = await client.post("/encode", json=payload)
                 assert resp.status_code == 200

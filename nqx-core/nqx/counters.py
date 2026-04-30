@@ -1,4 +1,5 @@
 """HW-style performance counters mirrored to the scalar register file."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

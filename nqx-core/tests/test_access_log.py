@@ -16,6 +16,7 @@ def test_access_log_writes_lines():
     from starlette.testclient import TestClient
 
     from server.api import app
+
     client = TestClient(app)
 
     # 5 requests hitting various endpoints
@@ -27,6 +28,7 @@ def test_access_log_writes_lines():
 
     from nqx.constants import NQXConfig
     from nqx.cpu import NQXCore
+
     cfg = NQXConfig(dim=128, bits=3)
     core = NQXCore(cfg)
     rng = np.random.default_rng(42)

@@ -65,7 +65,7 @@ def main():
     packed, _ = core.pk.pack3plus1(q_idx, sign_bits)
     hex_lines = []
     for i in range(0, min(len(packed), 32), 16):
-        hex_lines.append(packed[i:i+16].hex())
+        hex_lines.append(packed[i : i + 16].hex())
     print(f"Packed bytes (first 32 of {len(packed)}):")
     for line in hex_lines:
         print(f"  {line}")

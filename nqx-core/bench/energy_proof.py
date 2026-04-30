@@ -48,9 +48,7 @@ def measure_random(dim: int, n_vec: int) -> dict:
     bytes_in = n_vec * dim * 2
     bytes_out = n_vec * dim * (cfg.bits + 1) // 8
     memory_pj = (
-        bytes_in * cfg.pj_hbm_byte
-        + bytes_out * cfg.pj_hbm_byte
-        + bytes_in * cfg.pj_sram_byte
+        bytes_in * cfg.pj_hbm_byte + bytes_out * cfg.pj_hbm_byte + bytes_in * cfg.pj_sram_byte
     )
     polar_pj = n_vec * dim * (3 * cfg.pj_fp32_mul + 2 * cfg.pj_fp32_add)
     quant_pj = n_vec * dim * (2 * cfg.pj_fp32_mul + 2 * cfg.pj_fp32_add)
@@ -76,12 +74,14 @@ def measure_random(dim: int, n_vec: int) -> dict:
 def run(dims, n_vec):
     rows = []
     for dim in dims:
-        rows.append({
-            "dim": dim,
-            "n_vec": n_vec,
-            "phi": measure_phi(dim, n_vec),
-            "random": measure_random(dim, n_vec),
-        })
+        rows.append(
+            {
+                "dim": dim,
+                "n_vec": n_vec,
+                "phi": measure_phi(dim, n_vec),
+                "random": measure_random(dim, n_vec),
+            }
+        )
     return rows
 
 

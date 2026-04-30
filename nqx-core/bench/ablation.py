@@ -42,7 +42,7 @@ def synth_outliers(rng: np.random.Generator, n: int, dim: int) -> np.ndarray:
 
 
 def quantize_min_max(x: np.ndarray, bits: int) -> np.ndarray:
-    levels = 2 ** bits
+    levels = 2**bits
     mins = x.min(axis=0)
     maxs = x.max(axis=0)
     ranges = np.maximum(maxs - mins, 1e-8)
@@ -120,10 +120,11 @@ def format_markdown(rows) -> str:
         for rotation in ROTATIONS:
             cells = []
             for bits in bits_list:
-                row = next(r for r in rows
-                           if r["rotation"] == rotation
-                           and r["dim"] == dim
-                           and r["bits"] == bits)
+                row = next(
+                    r
+                    for r in rows
+                    if r["rotation"] == rotation and r["dim"] == dim and r["bits"] == bits
+                )
                 cells.append(f"{row['rmse']:.4f}")
             lines.append(f"| `{rotation}` | " + " | ".join(cells) + " |")
         lines.append("")

@@ -31,9 +31,13 @@ def test_encode_decode_roundtrip():
 
     dec = nqx_decode(
         hid,
-        enc["packed"], enc["sign_bits"],
-        enc["mins"], enc["maxs"],
-        enc["n"], enc["dim"], enc["bits"],
+        enc["packed"],
+        enc["sign_bits"],
+        enc["mins"],
+        enc["maxs"],
+        enc["n"],
+        enc["dim"],
+        enc["bits"],
     )
     assert dec["vectors"].shape == (8, 128)
     assert dec["decode_ms"] >= 0

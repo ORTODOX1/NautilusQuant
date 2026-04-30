@@ -9,12 +9,22 @@ def test_ablation_runs(tmp_path):
     out = tmp_path / "ablation.md"
     js = tmp_path / "ablation.json"
     result = subprocess.run(
-        [sys.executable, str(REPO / "bench" / "ablation.py"),
-         "--dims", "64", "128",
-         "--bits", "3", "4",
-         "--vectors", "256",
-         "--out", str(out),
-         "--json", str(js)],
+        [
+            sys.executable,
+            str(REPO / "bench" / "ablation.py"),
+            "--dims",
+            "64",
+            "128",
+            "--bits",
+            "3",
+            "4",
+            "--vectors",
+            "256",
+            "--out",
+            str(out),
+            "--json",
+            str(js),
+        ],
         check=True,
         capture_output=True,
         text=True,
@@ -24,6 +34,7 @@ def test_ablation_runs(tmp_path):
     assert "phi" in text and "hadamard" in text and "random" in text and "none" in text
     assert "dim = 64" in text and "dim = 128" in text
     import json
+
     rows = json.loads(js.read_text())
     assert len(rows) == 4 * 2 * 2
     for r in rows:
@@ -36,6 +47,6 @@ def test_phi_rotation_beats_no_rotation():
 
     rows = run(dims=[128], bits_list=[3], n_vec=512, seed=42)
     by_rot = {r["rotation"]: r["rmse"] for r in rows}
-    assert by_rot["phi"] < by_rot["none"], (
-        f"phi-rotation should improve RMSE over no rotation: {by_rot}"
-    )
+    assert (
+        by_rot["phi"] < by_rot["none"]
+    ), f"phi-rotation should improve RMSE over no rotation: {by_rot}"

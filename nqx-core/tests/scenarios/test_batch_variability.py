@@ -36,6 +36,6 @@ def test_rmse_independent_of_batch():
 
     ref = rmse_vals[64]
     for batch, rmse in rmse_vals.items():
-        assert abs(rmse / ref - 1.0) < 0.10, (
-            f"batch {batch}: RMSE {rmse:.4f} deviates from ref {ref:.4f} by >10%"
-        )
+        assert (
+            abs(rmse / ref - 1.0) < 0.10
+        ), f"batch {batch}: RMSE {rmse:.4f} deviates from ref {ref:.4f} by >10%"

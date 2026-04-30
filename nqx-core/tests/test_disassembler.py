@@ -41,19 +41,37 @@ def test_assemble_disassemble_assemble_roundtrip_bit_identical():
     again = assemble(text)
     assert len(program) == len(again)
     for a, b in zip(program, again):
-        assert encode_instruction(a) == encode_instruction(b), (
-            f"diff: {a} vs {b}"
-        )
+        assert encode_instruction(a) == encode_instruction(b), f"diff: {a} vs {b}"
 
 
 def test_disassemble_each_opcode_at_least_once():
     program = assemble(SAMPLE_SRC)
     text = disassemble(program)
     seen_mnemonics = {line.split()[0] for line in text.splitlines() if line.strip()}
-    expected = {"LDV", "LDV_ASYNC", "BARRIER", "NOP", "MOV", "GVNS", "GVNS_INV",
-                "POLAR", "IPOLAR", "QUANT", "DEQUANT", "QJL", "UNQJL", "PACK3",
-                "UNPACK3", "MXPACK", "MXUNPACK", "SUBBIT_ENC", "SUBBIT_DEC",
-                "ATTN_DOT", "STV", "HALT"}
+    expected = {
+        "LDV",
+        "LDV_ASYNC",
+        "BARRIER",
+        "NOP",
+        "MOV",
+        "GVNS",
+        "GVNS_INV",
+        "POLAR",
+        "IPOLAR",
+        "QUANT",
+        "DEQUANT",
+        "QJL",
+        "UNQJL",
+        "PACK3",
+        "UNPACK3",
+        "MXPACK",
+        "MXUNPACK",
+        "SUBBIT_ENC",
+        "SUBBIT_DEC",
+        "ATTN_DOT",
+        "STV",
+        "HALT",
+    }
     assert expected.issubset(seen_mnemonics)
 
 
@@ -86,7 +104,9 @@ def test_cli_prints_disassembly(tmp_path):
     bin_path.write_bytes(blob)
     result = subprocess.run(
         [sys.executable, "-m", "nqx.disassembler", str(bin_path)],
-        capture_output=True, text=True, check=True,
+        capture_output=True,
+        text=True,
+        check=True,
     )
     assert "LDV V0" in result.stdout
     assert "GVNS V0, 0" in result.stdout

@@ -73,9 +73,9 @@ def test_async_dma_overlaps_with_compute():
     core2.execute_program(prog2)
     sync_total = core2.cycles.total
 
-    assert overlap_total < sync_total, (
-        f"async {overlap_total} should be less than sync {sync_total}"
-    )
+    assert (
+        overlap_total < sync_total
+    ), f"async {overlap_total} should be less than sync {sync_total}"
 
 
 def test_barrier_waits_when_compute_shorter_than_dma():

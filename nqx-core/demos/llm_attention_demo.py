@@ -1,4 +1,5 @@
 """Synthetic single-head attention forward pass on NQX-compressed K/V."""
+
 from __future__ import annotations
 
 import argparse
@@ -120,7 +121,9 @@ def format_markdown(report: dict) -> str:
     lines.append(f"| RMSE V reconstruction               | {report['rmse_v_recon']:.4f} |")
     lines.append(f"| KV cache bytes (FP16)               | {report['kv_bytes_fp16']:,} B |")
     lines.append(f"| KV cache bytes (NQX 3+1)            | {report['kv_bytes_nqx']:,} B |")
-    lines.append(f"| **Compression ratio**               | **{report['compression_ratio']:.2f}×** |")
+    lines.append(
+        f"| **Compression ratio**               | **{report['compression_ratio']:.2f}×** |"
+    )
     lines.append(f"| Cycles per decoded token (NQX)      | {report['cycles_per_token_nqx']:,} |")
     lines.append("")
     lines.append("## Reproduction")

@@ -16,7 +16,6 @@ import numpy as np
 from nqx.constants import NQXConfig
 from nqx.cpu import NQXCore
 
-
 PRNG_CYCLES_PER_VECTOR = 8
 
 
@@ -38,7 +37,7 @@ def random_orthogonal(rng: np.random.Generator, n: int) -> np.ndarray:
 
 
 def quant_dequant(x: np.ndarray, bits: int) -> np.ndarray:
-    levels = 2 ** bits
+    levels = 2**bits
     mins = x.min(axis=0)
     maxs = x.max(axis=0)
     ranges = np.maximum(maxs - mins, 1e-8)
@@ -56,7 +55,9 @@ def measure_phi(x: np.ndarray, bits: int):
     back = core.inverse_rotation(quant)
     elapsed_ms = (time.perf_counter() - t0) * 1000
     n_vec = x.shape[0]
-    cycles_compute = 3 * cfg.cycles_givens_layer + 1 + cfg.cycles_quant_minmax + cfg.cycles_quant_round
+    cycles_compute = (
+        3 * cfg.cycles_givens_layer + 1 + cfg.cycles_quant_minmax + cfg.cycles_quant_round
+    )
     cycles_total = cycles_compute + n_vec - 1
     return {
         "rmse": float(np.sqrt(((x - back) ** 2).mean())),
@@ -119,7 +120,9 @@ def format_markdown(rows) -> str:
     lines.append("")
     lines.append("## Per (dim, bits) results")
     lines.append("")
-    lines.append("| dim | bits | φ RMSE | random RMSE (μ ± σ) | φ wall ms | random wall ms | φ cycles | random cycles |")
+    lines.append(
+        "| dim | bits | φ RMSE | random RMSE (μ ± σ) | φ wall ms | random wall ms | φ cycles | random cycles |"
+    )
     lines.append("|---:|---:|---:|---:|---:|---:|---:|---:|")
     for row in rows:
         phi = row["phi"]

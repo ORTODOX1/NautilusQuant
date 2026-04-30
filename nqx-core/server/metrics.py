@@ -47,7 +47,7 @@ class Histogram:
     def render(self) -> List[str]:
         lines = [f"# HELP {self.name} {self.help}", f"# TYPE {self.name} histogram"]
         for b in self._buckets:
-            lines.append(f"{self.name}_bucket{{le=\"{b}\"}} {self._counts[b]}")
+            lines.append(f'{self.name}_bucket{{le="{b}"}} {self._counts[b]}')
         lines.append(f"{self.name}_bucket{{le=\"+Inf\"}} {self._counts[float('inf')]}")
         lines.append(f"{self.name}_count {self._n}")
         lines.append(f"{self.name}_sum {self._sum:.2f}")

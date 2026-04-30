@@ -205,9 +205,7 @@ class PackUnit:
         n_bytes = (total_bits + 7) // 8
 
         mask_bits = (1 << bits) - 1
-        combined = (q.astype(np.uint8) & mask_bits) | (
-            (sign_bits.astype(np.uint8) & 1) << bits
-        )
+        combined = (q.astype(np.uint8) & mask_bits) | ((sign_bits.astype(np.uint8) & 1) << bits)
         flat = combined.reshape(-1)
         shifts = np.arange(total_bits_per_value, dtype=np.uint8)
         expanded = ((flat[:, None] >> shifts) & 1).astype(np.uint8)
@@ -231,12 +229,10 @@ class PackUnit:
         mask_bits = (1 << bits) - 1
         n_values = n * d
 
-        bit_stream = np.unpackbits(
-            np.frombuffer(data, dtype=np.uint8), bitorder="little"
-        )
+        bit_stream = np.unpackbits(np.frombuffer(data, dtype=np.uint8), bitorder="little")
         needed = n_values * total
         bit_stream = bit_stream[:needed].reshape(n_values, total)
-        weights = (1 << np.arange(total, dtype=np.uint8))
+        weights = 1 << np.arange(total, dtype=np.uint8)
         values = (bit_stream * weights).sum(axis=1).astype(np.uint8)
         q = (values & mask_bits).reshape(n, d)
         sign = ((values >> bits) & 1).reshape(n, d)

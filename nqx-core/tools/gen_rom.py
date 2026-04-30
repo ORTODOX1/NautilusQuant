@@ -51,7 +51,9 @@ def verify(dim: int, mem_path: Path) -> None:
     cfg = NQXConfig(dim=dim)
     lut = GoldenAngleLUT(cfg)
     text = mem_path.read_text().splitlines()
-    words = [int(line.split()[0], 16) for line in text if line.strip() and not line.startswith("//")]
+    words = [
+        int(line.split()[0], 16) for line in text if line.strip() and not line.startswith("//")
+    ]
     idx = 0
     for layer_name in ("L1", "L2", "L3"):
         layer = lut.layers[layer_name]

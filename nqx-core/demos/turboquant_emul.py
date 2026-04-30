@@ -1,4 +1,5 @@
 """Pure-numpy TurboQuant baseline emulation. No torch."""
+
 from __future__ import annotations
 
 import sys
@@ -12,7 +13,6 @@ if str(repo_root) not in sys.path:
 import numpy as np
 
 from nqx.constants import NQXConfig
-
 
 PRNG_CYCLES_PER_RANDOM = 4
 PRNG_PJ_PER_BYTE = 0.4
@@ -53,7 +53,7 @@ def from_polar(p: np.ndarray) -> np.ndarray:
 
 
 def quant_dequant_with_qjl(x: np.ndarray, bits: int, alpha: float):
-    levels = 2 ** bits
+    levels = 2**bits
     if x.ndim == 1:
         xb = x.reshape(1, -1)
     else:
@@ -80,13 +80,19 @@ def encode(x: np.ndarray, bits: int = 3, qjl_alpha: float = 0.5, seed: int = 0) 
     polar = to_polar(rotated)
     corrected, q, sign, mins, maxs = quant_dequant_with_qjl(polar, bits, qjl_alpha)
     return TurboEncoded(
-        rotation=T, q=q, sign=sign, mins=mins, maxs=maxs,
-        shape=x.shape, bits=bits, qjl_alpha=qjl_alpha,
+        rotation=T,
+        q=q,
+        sign=sign,
+        mins=mins,
+        maxs=maxs,
+        shape=x.shape,
+        bits=bits,
+        qjl_alpha=qjl_alpha,
     )
 
 
 def decode(enc: TurboEncoded) -> np.ndarray:
-    levels = 2 ** enc.bits
+    levels = 2**enc.bits
     ranges = np.maximum(enc.maxs - enc.mins, 1e-8)
     dequant = (enc.q.astype(np.float32) / (levels - 1)) * ranges + enc.mins
     cart = from_polar(dequant)
@@ -101,9 +107,7 @@ def encode_cycles(cfg: NQXConfig, n_vec: int) -> int:
     quant_cycles = cfg.cycles_quant_minmax + cfg.cycles_quant_round
     qjl_cycles = cfg.cycles_qjl
     pack_cycles = cfg.cycles_pack
-    pipeline_depth = (
-        rotate_cycles + polar_cycles + quant_cycles + qjl_cycles + pack_cycles
-    )
+    pipeline_depth = rotate_cycles + polar_cycles + quant_cycles + qjl_cycles + pack_cycles
     return prng_cycles + pipeline_depth + n_vec - 1
 
 
@@ -119,8 +123,17 @@ def encode_energy_pj(cfg: NQXConfig, n_vec: int) -> dict:
     pack_pj = ((n_vec * dim * 4) + 7) // 8 * cfg.pj_sram_byte
     bytes_in_pj = n_vec * dim * 2 * cfg.pj_hbm_byte
     bytes_out_pj = ((n_vec * dim * 4) + 7) // 8 * cfg.pj_hbm_byte
-    total_pj = (prng_pj + matrix_fetch_pj + rotate_pj + polar_pj + quant_pj
-                + qjl_pj + pack_pj + bytes_in_pj + bytes_out_pj)
+    total_pj = (
+        prng_pj
+        + matrix_fetch_pj
+        + rotate_pj
+        + polar_pj
+        + quant_pj
+        + qjl_pj
+        + pack_pj
+        + bytes_in_pj
+        + bytes_out_pj
+    )
     return {
         "prng_pj": prng_pj,
         "matrix_fetch_pj": matrix_fetch_pj,

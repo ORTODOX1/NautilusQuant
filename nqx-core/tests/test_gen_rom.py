@@ -14,7 +14,15 @@ REPO = Path(__file__).resolve().parent.parent
 def test_gen_rom_matches_lut(tmp_path):
     out = tmp_path / "golden_rom.mem"
     result = subprocess.run(
-        [sys.executable, str(REPO / "tools" / "gen_rom.py"), "--dim", "128", "--out", str(out), "--verify"],
+        [
+            sys.executable,
+            str(REPO / "tools" / "gen_rom.py"),
+            "--dim",
+            "128",
+            "--out",
+            str(out),
+            "--verify",
+        ],
         check=True,
         capture_output=True,
         text=True,
@@ -23,7 +31,9 @@ def test_gen_rom_matches_lut(tmp_path):
     cfg = NQXConfig(dim=128)
     lut = GoldenAngleLUT(cfg)
     text = out.read_text().splitlines()
-    words = [int(line.split()[0], 16) for line in text if line.strip() and not line.startswith("//")]
+    words = [
+        int(line.split()[0], 16) for line in text if line.strip() and not line.startswith("//")
+    ]
     expected_words = sum(len(lut.layers[n]) for n in ("L1", "L2", "L3")) * 4
     assert len(words) == expected_words
 

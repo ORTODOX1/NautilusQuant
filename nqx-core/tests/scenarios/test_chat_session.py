@@ -30,6 +30,4 @@ def test_cumulative_rmse_does_not_drift():
 
     baseline = rmse_list[0]
     worst = max(rmse_list)
-    assert worst < 2.0 * baseline, (
-        f"RMSE drifted: turn0={baseline:.4f} worst={worst:.4f}"
-    )
+    assert worst < 2.0 * baseline, f"RMSE drifted: turn0={baseline:.4f} worst={worst:.4f}"

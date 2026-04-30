@@ -1,4 +1,5 @@
 """IEEE 1149.1 TAP controller state machine + simple debug commands."""
+
 from __future__ import annotations
 
 import enum
@@ -28,27 +29,27 @@ class TAPState(enum.IntEnum):
 # next-state table indexed by [current_state][TMS bit]
 _NEXT = {
     TAPState.TEST_LOGIC_RESET: (TAPState.RUN_TEST_IDLE, TAPState.TEST_LOGIC_RESET),
-    TAPState.RUN_TEST_IDLE:    (TAPState.RUN_TEST_IDLE, TAPState.SELECT_DR_SCAN),
-    TAPState.SELECT_DR_SCAN:   (TAPState.CAPTURE_DR,    TAPState.SELECT_IR_SCAN),
-    TAPState.CAPTURE_DR:       (TAPState.SHIFT_DR,      TAPState.EXIT1_DR),
-    TAPState.SHIFT_DR:         (TAPState.SHIFT_DR,      TAPState.EXIT1_DR),
-    TAPState.EXIT1_DR:         (TAPState.PAUSE_DR,      TAPState.UPDATE_DR),
-    TAPState.PAUSE_DR:         (TAPState.PAUSE_DR,      TAPState.EXIT2_DR),
-    TAPState.EXIT2_DR:         (TAPState.SHIFT_DR,      TAPState.UPDATE_DR),
-    TAPState.UPDATE_DR:        (TAPState.RUN_TEST_IDLE, TAPState.SELECT_DR_SCAN),
-    TAPState.SELECT_IR_SCAN:   (TAPState.CAPTURE_IR,    TAPState.TEST_LOGIC_RESET),
-    TAPState.CAPTURE_IR:       (TAPState.SHIFT_IR,      TAPState.EXIT1_IR),
-    TAPState.SHIFT_IR:         (TAPState.SHIFT_IR,      TAPState.EXIT1_IR),
-    TAPState.EXIT1_IR:         (TAPState.PAUSE_IR,      TAPState.UPDATE_IR),
-    TAPState.PAUSE_IR:         (TAPState.PAUSE_IR,      TAPState.EXIT2_IR),
-    TAPState.EXIT2_IR:         (TAPState.SHIFT_IR,      TAPState.UPDATE_IR),
-    TAPState.UPDATE_IR:        (TAPState.RUN_TEST_IDLE, TAPState.SELECT_DR_SCAN),
+    TAPState.RUN_TEST_IDLE: (TAPState.RUN_TEST_IDLE, TAPState.SELECT_DR_SCAN),
+    TAPState.SELECT_DR_SCAN: (TAPState.CAPTURE_DR, TAPState.SELECT_IR_SCAN),
+    TAPState.CAPTURE_DR: (TAPState.SHIFT_DR, TAPState.EXIT1_DR),
+    TAPState.SHIFT_DR: (TAPState.SHIFT_DR, TAPState.EXIT1_DR),
+    TAPState.EXIT1_DR: (TAPState.PAUSE_DR, TAPState.UPDATE_DR),
+    TAPState.PAUSE_DR: (TAPState.PAUSE_DR, TAPState.EXIT2_DR),
+    TAPState.EXIT2_DR: (TAPState.SHIFT_DR, TAPState.UPDATE_DR),
+    TAPState.UPDATE_DR: (TAPState.RUN_TEST_IDLE, TAPState.SELECT_DR_SCAN),
+    TAPState.SELECT_IR_SCAN: (TAPState.CAPTURE_IR, TAPState.TEST_LOGIC_RESET),
+    TAPState.CAPTURE_IR: (TAPState.SHIFT_IR, TAPState.EXIT1_IR),
+    TAPState.SHIFT_IR: (TAPState.SHIFT_IR, TAPState.EXIT1_IR),
+    TAPState.EXIT1_IR: (TAPState.PAUSE_IR, TAPState.UPDATE_IR),
+    TAPState.PAUSE_IR: (TAPState.PAUSE_IR, TAPState.EXIT2_IR),
+    TAPState.EXIT2_IR: (TAPState.SHIFT_IR, TAPState.UPDATE_IR),
+    TAPState.UPDATE_IR: (TAPState.RUN_TEST_IDLE, TAPState.SELECT_DR_SCAN),
 }
 
 
 # IEEE 1149.1 standard instructions + NQX vendor IRs.
 class IR(enum.IntEnum):
-    BYPASS = 0xFF        # all-ones, JTAG-required
+    BYPASS = 0xFF  # all-ones, JTAG-required
     IDCODE = 0x01
     SAMPLE_PRELOAD = 0x02
     EXTEST = 0x03
@@ -117,12 +118,10 @@ class JTAGDebugger:
 
     def attach(self, core) -> None:
         self.vrf_snapshot = {
-            i: core.vrf.read(i).reshape(-1).tolist()
-            for i in range(core.config.n_vector_regs)
+            i: core.vrf.read(i).reshape(-1).tolist() for i in range(core.config.n_vector_regs)
         }
         self.srf_snapshot = {
-            i: core.srf.read(i).reshape(-1).tolist()
-            for i in range(core.config.n_scalar_regs)
+            i: core.srf.read(i).reshape(-1).tolist() for i in range(core.config.n_scalar_regs)
         }
         self.csr_snapshot = dict(core.perf.snapshot())
 
@@ -174,11 +173,30 @@ def walk_full_state_space() -> List[TAPState]:
     sequence: List[TAPState] = [tap.state]
     pattern = [
         # TLR -> RTI -> SDS -> CDR -> SDR -> E1DR -> PDR -> E2DR -> UDR
-        0, 1, 0, 0, 1, 0, 1, 1,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
         # UDR -> SDS -> SIS -> CIR -> SIR -> E1IR -> PIR -> E2IR -> UIR -> RTI
-        1, 1, 0, 0, 1, 0, 1, 1, 0,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
         # final reset to TLR
-        1, 1, 1, 1, 1,
+        1,
+        1,
+        1,
+        1,
+        1,
     ]
     for tms in pattern:
         sequence.append(tap.clock(tms))

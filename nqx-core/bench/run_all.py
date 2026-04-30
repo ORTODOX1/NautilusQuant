@@ -91,7 +91,9 @@ def bench_mx_all(n_vectors, dim):
         dt = time.perf_counter() - t0
         rmse = float(np.sqrt(((dequant - x) ** 2).mean()))
         results.append((fmt, dt * 1000, meta["effective_bits"], rmse))
-        print(f"  MX {fmt:6s}: {dt*1000:.1f}ms eff_bits={meta['effective_bits']:.1f} rmse={rmse:.4f}")
+        print(
+            f"  MX {fmt:6s}: {dt*1000:.1f}ms eff_bits={meta['effective_bits']:.1f} rmse={rmse:.4f}"
+        )
     return results
 
 
@@ -107,7 +109,9 @@ def bench_subbit(pairs, n_vectors, dim):
         dt = time.perf_counter() - t0
         rmse = float(np.sqrt(((polar - out) ** 2).mean()))
         results.append((r_bits, a_bits, dt * 1000, meta["compression_ratio"], rmse))
-        print(f"  SUBBIT (r={r_bits},θ={a_bits}): {dt*1000:.1f}ms comp={meta['compression_ratio']:.1f}x rmse={rmse:.4f}")
+        print(
+            f"  SUBBIT (r={r_bits},θ={a_bits}): {dt*1000:.1f}ms comp={meta['compression_ratio']:.1f}x rmse={rmse:.4f}"
+        )
     return results
 
 
@@ -124,8 +128,10 @@ def main():
     for dim, bits, n in configs:
         r = bench_config(dim, bits, n)
         results.append(r)
-        print(f"  dim={dim} bits={bits} vectors={n}: enc={r['enc_cycles']}cyc dec={r['dec_cycles']}cyc "
-              f"{r['enc_ms']+r['dec_ms']:.1f}ms energy={r['energy_nj']:.0f}nJ rmse={r['rmse']:.4f}")
+        print(
+            f"  dim={dim} bits={bits} vectors={n}: enc={r['enc_cycles']}cyc dec={r['dec_cycles']}cyc "
+            f"{r['enc_ms']+r['dec_ms']:.1f}ms energy={r['energy_nj']:.0f}nJ rmse={r['rmse']:.4f}"
+        )
 
     print("\n=== Extended: ATTN_DOT ===")
     attn_batches = [(32, 32, "32x32"), (128, 128, "128x128"), (512, 512, "512x512")]

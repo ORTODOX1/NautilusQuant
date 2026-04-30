@@ -1,5 +1,6 @@
 """Coverage tracker for NQ-ASM execution. Records opcodes, op-pair sequences,
 and register reads/writes per program."""
+
 from __future__ import annotations
 
 import json
@@ -44,13 +45,21 @@ class Coverage:
 
 
 _WRITE_OPS = {
-    Opcode.LDV, Opcode.LDV_ASYNC, Opcode.MOV,
-    Opcode.GVNS, Opcode.GVNS_INV,
-    Opcode.POLAR, Opcode.IPOLAR,
-    Opcode.QUANT, Opcode.DEQUANT,
-    Opcode.QJL, Opcode.UNPACK3,
-    Opcode.MXPACK, Opcode.MXUNPACK,
-    Opcode.SUBBIT_ENC, Opcode.SUBBIT_DEC,
+    Opcode.LDV,
+    Opcode.LDV_ASYNC,
+    Opcode.MOV,
+    Opcode.GVNS,
+    Opcode.GVNS_INV,
+    Opcode.POLAR,
+    Opcode.IPOLAR,
+    Opcode.QUANT,
+    Opcode.DEQUANT,
+    Opcode.QJL,
+    Opcode.UNPACK3,
+    Opcode.MXPACK,
+    Opcode.MXUNPACK,
+    Opcode.SUBBIT_ENC,
+    Opcode.SUBBIT_DEC,
 }
 
 _READ_OPS = {
@@ -135,13 +144,18 @@ def write_report(cov: Coverage, out_dir: Path) -> Path:
     md = out_dir / f"coverage-{ts}.md"
     md.write_text(render_markdown(cov))
     js = out_dir / f"coverage-{ts}.json"
-    js.write_text(json.dumps({
-        "n_programs": cov.n_programs,
-        "n_instructions": cov.n_instructions,
-        "opcode_counts": cov.opcode_counts,
-        "pair_counts": {f"{a}->{b}": v for (a, b), v in cov.pair_counts.items()},
-        "reg_reads": cov.reg_reads,
-        "reg_writes": cov.reg_writes,
-        "opcode_coverage": cov.opcode_coverage_fraction(),
-    }, indent=2))
+    js.write_text(
+        json.dumps(
+            {
+                "n_programs": cov.n_programs,
+                "n_instructions": cov.n_instructions,
+                "opcode_counts": cov.opcode_counts,
+                "pair_counts": {f"{a}->{b}": v for (a, b), v in cov.pair_counts.items()},
+                "reg_reads": cov.reg_reads,
+                "reg_writes": cov.reg_writes,
+                "opcode_coverage": cov.opcode_coverage_fraction(),
+            },
+            indent=2,
+        )
+    )
     return md

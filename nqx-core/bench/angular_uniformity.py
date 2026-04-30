@@ -27,7 +27,7 @@ def random_angles(rng: np.random.Generator, n: int) -> np.ndarray:
 
 def hadamard_pair_angles(n: int) -> np.ndarray:
     k = np.arange(1, n + 1, dtype=np.float64)
-    return ((k * math.pi / 2) % (2.0 * math.pi))
+    return (k * math.pi / 2) % (2.0 * math.pi)
 
 
 def fractional(angles: np.ndarray) -> np.ndarray:
@@ -83,15 +83,17 @@ def run(ns, seeds_per_random: int = 8):
             row = measure("random", n, seed=int(rng_master.integers(0, 10**9)))
             rand_ks.append(row["ks"])
             rand_disc.append(row["star_disc"])
-        rows.append({
-            "method": "random",
-            "n": n,
-            "ks": float(np.mean(rand_ks)),
-            "ks_std": float(np.std(rand_ks)),
-            "star_disc": float(np.mean(rand_disc)),
-            "star_disc_std": float(np.std(rand_disc)),
-            "n_seeds": seeds_per_random,
-        })
+        rows.append(
+            {
+                "method": "random",
+                "n": n,
+                "ks": float(np.mean(rand_ks)),
+                "ks_std": float(np.std(rand_ks)),
+                "star_disc": float(np.mean(rand_disc)),
+                "star_disc_std": float(np.std(rand_disc)),
+                "n_seeds": seeds_per_random,
+            }
+        )
         rows.append(measure("hadamard", n, seed=0))
     return rows
 
@@ -116,7 +118,11 @@ def format_markdown(rows, ns) -> str:
     lines.append("")
     lines.append("## Measured discrepancy")
     lines.append("")
-    header = "| N | φ-Givens | random (mean ± σ, " + f"{rows[1]['n_seeds']} seeds)" + " | Hadamard pairs |"
+    header = (
+        "| N | φ-Givens | random (mean ± σ, "
+        + f"{rows[1]['n_seeds']} seeds)"
+        + " | Hadamard pairs |"
+    )
     lines.append(header)
     lines.append("|---:|---:|---:|---:|")
     for n in ns:
@@ -154,7 +160,9 @@ def format_markdown(rows, ns) -> str:
     lines.append("")
     lines.append("## References")
     lines.append("")
-    lines.append("- H. Weyl, *Über die Gleichverteilung von Zahlen mod. Eins*, Math. Ann. 77 (1916).")
+    lines.append(
+        "- H. Weyl, *Über die Gleichverteilung von Zahlen mod. Eins*, Math. Ann. 77 (1916)."
+    )
     lines.append("- L. Kuipers, H. Niederreiter, *Uniform Distribution of Sequences*, Wiley 1974.")
     lines.append("- K. F. Roth, *On irregularities of distribution*, Mathematika 1 (1954).")
     return "\n".join(lines) + "\n"

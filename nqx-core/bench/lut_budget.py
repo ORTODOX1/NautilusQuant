@@ -13,7 +13,6 @@ if str(repo_root) not in sys.path:
 from nqx.constants import NQXConfig
 from nqx.lut import GoldenAngleLUT
 
-
 PHI_BYTES_PER_PAIR = 1 + 1 + 4 + 4  # pair_i (uint8) + pair_j (uint8) + cos FP32 + sin FP32
 
 

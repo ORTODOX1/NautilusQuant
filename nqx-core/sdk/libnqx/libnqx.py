@@ -47,6 +47,7 @@ def nqx_encode(
         vectors = vectors.reshape(1, -1)
 
     import time
+
     t0 = time.perf_counter()
     enc = core.encode(vectors)
     dt = (time.perf_counter() - t0) * 1000
@@ -89,9 +90,11 @@ def nqx_decode(
     maxs_arr = np.asarray(maxs, dtype=np.float32)
 
     from nqx.functional_units import QuantUnit
+
     qu = QuantUnit(core.config)
 
     import time
+
     t0 = time.perf_counter()
     dequant, _ = qu.dequantize(q, mins_arr, maxs_arr, bits)
     core.pu.from_polar(dequant)
@@ -99,8 +102,14 @@ def nqx_decode(
     from nqx.cpu import EncodeResult, DecodeResult
 
     er = EncodeResult(
-        quantized_indices=q, sign_bits=sign, mins=mins_arr, maxs=maxs_arr,
-        packed_bytes=packed, polar=dequant, cycles=0, energy_nj=0,
+        quantized_indices=q,
+        sign_bits=sign,
+        mins=mins_arr,
+        maxs=maxs_arr,
+        packed_bytes=packed,
+        polar=dequant,
+        cycles=0,
+        energy_nj=0,
     )
     dec = core.decode(er)
     dt = (time.perf_counter() - t0) * 1000
@@ -120,4 +129,5 @@ def nqx_close(handle: int) -> None:
 
 def nqx_version() -> str:
     import nqx
+
     return nqx.__version__

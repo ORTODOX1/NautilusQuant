@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Random Instruction Generator for NQ-ASM. Generates valid programs and
 runs them through assembler + emulator, checking invariants."""
+
 from __future__ import annotations
 
 import argparse
@@ -342,8 +343,9 @@ def run_iterations(n_iters: int, length_min: int, length_max: int, dim: int, see
             cycles_total += result["cycles"]
             n_instr_total += result["n_instructions"]
         except Exception as exc:
-            crashes.append({"iter": i, "src": src, "error": repr(exc),
-                            "trace": traceback.format_exc(limit=4)})
+            crashes.append(
+                {"iter": i, "src": src, "error": repr(exc), "trace": traceback.format_exc(limit=4)}
+            )
     return {
         "iterations": n_iters,
         "instructions_total": n_instr_total,
@@ -374,11 +376,13 @@ def main(argv=None) -> int:
 
     report = run_iterations(args.iters, args.min_len, args.max_len, args.dim, args.seed)
     cov = report["coverage"]
-    print(f"RIG: {report['iterations']} programs, "
-          f"{report['instructions_total']} instructions, "
-          f"{report['crash_count']} crashes, "
-          f"{report['cycles_total']:,} simulated cycles, "
-          f"opcode coverage {cov.opcode_coverage_fraction() * 100:.1f}%")
+    print(
+        f"RIG: {report['iterations']} programs, "
+        f"{report['instructions_total']} instructions, "
+        f"{report['crash_count']} crashes, "
+        f"{report['cycles_total']:,} simulated cycles, "
+        f"opcode coverage {cov.opcode_coverage_fraction() * 100:.1f}%"
+    )
     if cov.missing_opcodes():
         print(f"  uncovered opcodes: {', '.join(cov.missing_opcodes())}")
     if report["crashes"]:
@@ -388,15 +392,20 @@ def main(argv=None) -> int:
     md = write_report(cov, args.out_dir)
     print(f"  coverage report: {md}")
     if args.json:
-        args.json.write_text(json.dumps({
-            "iterations": report["iterations"],
-            "instructions_total": report["instructions_total"],
-            "cycles_total": report["cycles_total"],
-            "crash_count": report["crash_count"],
-            "opcode_coverage": cov.opcode_coverage_fraction(),
-            "missing_opcodes": cov.missing_opcodes(),
-            "opcode_counts": cov.opcode_counts,
-        }, indent=2))
+        args.json.write_text(
+            json.dumps(
+                {
+                    "iterations": report["iterations"],
+                    "instructions_total": report["instructions_total"],
+                    "cycles_total": report["cycles_total"],
+                    "crash_count": report["crash_count"],
+                    "opcode_coverage": cov.opcode_coverage_fraction(),
+                    "missing_opcodes": cov.missing_opcodes(),
+                    "opcode_counts": cov.opcode_counts,
+                },
+                indent=2,
+            )
+        )
     return 0 if report["crash_count"] == 0 else 1
 
 

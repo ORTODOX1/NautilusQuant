@@ -9,9 +9,21 @@ REPO = Path(__file__).resolve().parent.parent
 def test_run_demo_finishes_under_30_seconds():
     t0 = time.perf_counter()
     result = subprocess.run(
-        [sys.executable, str(REPO / "demos" / "run_demo.py"),
-         "--vectors", "256", "--runs", "10", "--seq", "256", "--n-heads", "4"],
-        capture_output=True, text=True, timeout=60,
+        [
+            sys.executable,
+            str(REPO / "demos" / "run_demo.py"),
+            "--vectors",
+            "256",
+            "--runs",
+            "10",
+            "--seq",
+            "256",
+            "--n-heads",
+            "4",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=60,
     )
     elapsed = time.perf_counter() - t0
     assert result.returncode == 0, result.stderr
@@ -21,12 +33,24 @@ def test_run_demo_finishes_under_30_seconds():
 
 
 def test_side_by_side_table_has_all_metrics():
-    text = (REPO / "demos" / "side_by_side.md").read_text() if (REPO / "demos" / "side_by_side.md").exists() else ""
+    text = (
+        (REPO / "demos" / "side_by_side.md").read_text()
+        if (REPO / "demos" / "side_by_side.md").exists()
+        else ""
+    )
     if not text:
         subprocess.run(
-            [sys.executable, str(REPO / "demos" / "side_by_side.py"),
-             "--vectors", "256", "--runs", "5"],
-            capture_output=True, text=True, check=True,
+            [
+                sys.executable,
+                str(REPO / "demos" / "side_by_side.py"),
+                "--vectors",
+                "256",
+                "--runs",
+                "5",
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
         )
         text = (REPO / "demos" / "side_by_side.md").read_text()
     for needle in ("RMSE roundtrip", "Cycles", "Energy", "LUT", "Determinism", "Compression"):

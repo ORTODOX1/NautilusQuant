@@ -17,9 +17,9 @@ def generate_adversarial_spikes(n_vectors: int, dim: int, rng: np.random.Generat
 
 def generate_adversarial_golden_angle(n_vectors: int, dim: int):
     """Periodic pattern at golden-angle frequency to try resonance with LUT."""
-    phi = (1 + 5 ** 0.5) / 2
+    phi = (1 + 5**0.5) / 2
     t = np.arange(n_vectors)[:, None] * np.arange(dim)[None, :]
-    x = np.sin(t * 2 * np.pi / phi ** 2).astype(np.float32)
+    x = np.sin(t * 2 * np.pi / phi**2).astype(np.float32)
     return x
 
 

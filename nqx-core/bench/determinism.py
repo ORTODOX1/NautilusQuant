@@ -34,7 +34,7 @@ def random_encode(x: np.ndarray, seed: int, bits: int = 3) -> bytes:
     sign[sign == 0] = 1.0
     T = (q * sign).astype(np.float32)
     rotated = x @ T
-    levels = 2 ** bits
+    levels = 2**bits
     mins = rotated.min(axis=0)
     maxs = rotated.max(axis=0)
     ranges = np.maximum(maxs - mins, 1e-8)
@@ -82,8 +82,12 @@ def format_markdown(report) -> str:
     lines.append("")
     lines.append("| Method | Distinct hashes | All identical? |")
     lines.append("|---|---:|---|")
-    lines.append(f"| **φ-Givens (NQXCore.encode)** | {report['phi_unique_hashes']} / {report['n_repeats']} | {'YES' if report['phi_all_match'] else 'no'} |")
-    lines.append(f"| Random rotation (fresh QR per run) | {report['rand_unique_hashes']} / {report['n_repeats']} | {'YES' if report['rand_all_match'] else 'no'} |")
+    lines.append(
+        f"| **φ-Givens (NQXCore.encode)** | {report['phi_unique_hashes']} / {report['n_repeats']} | {'YES' if report['phi_all_match'] else 'no'} |"
+    )
+    lines.append(
+        f"| Random rotation (fresh QR per run) | {report['rand_unique_hashes']} / {report['n_repeats']} | {'YES' if report['rand_all_match'] else 'no'} |"
+    )
     lines.append("")
     lines.append(f"First φ output hash: `{report['phi_first_hash']}`")
     lines.append("")

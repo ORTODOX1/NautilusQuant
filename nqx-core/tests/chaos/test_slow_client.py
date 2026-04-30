@@ -29,12 +29,13 @@ def test_slow_client_does_not_hang():
         async def slow_body():
             for i in range(0, len(body), 1):
                 await asyncio.sleep(0.01)
-                yield body[i:i + 1]
+                yield body[i : i + 1]
 
         async with AsyncClient(transport=transport, base_url=base_url, timeout=30) as client:
             try:
                 resp = await client.post(
-                    "/encode", content=slow_body(),
+                    "/encode",
+                    content=slow_body(),
                     headers={"content-type": "application/json"},
                 )
                 # Any status is fine — key is that it didn't hang

@@ -1,4 +1,5 @@
 """TurboQuant vs NautilusQuant on identical inputs — main pitch table."""
+
 from __future__ import annotations
 
 import argparse
@@ -45,9 +46,13 @@ def measure_turbo(x: np.ndarray, runs: int = 100):
     hashes = set()
     for s in range(runs):
         e = turbo_encode(x, seed=s)
-        h = hashlib.sha256(e.q.tobytes() + e.sign.tobytes()
-                           + e.mins.tobytes() + e.maxs.tobytes()
-                           + e.rotation.tobytes()).hexdigest()
+        h = hashlib.sha256(
+            e.q.tobytes()
+            + e.sign.tobytes()
+            + e.mins.tobytes()
+            + e.maxs.tobytes()
+            + e.rotation.tobytes()
+        ).hexdigest()
         hashes.add(h)
 
     cycles = turbo_cycles(cfg, x.shape[0])
