@@ -18,9 +18,9 @@
 **[How it works](#how-it-works)** ·
 **[NQX-Core 🆕](#nqx-core--pre-silicon-emulator-and-chip-development-kit)** ·
 **[Numbers](#numbers-measured-not-promised)** ·
+**[Maritime](#industrial-applications--shipboard-edge-ai)** ·
 **[Roadmap](#roadmap)** ·
-**[Related work](#related-work)** ·
-**[Cite](#citation)**
+**[About the author](#about-the-author)**
 
 </div>
 
@@ -28,11 +28,11 @@
 
 ## TL;DR
 
-KV-cache eats ~80% of inference HBM. Industry uses **random rotation + 3-bit quantize** ([TurboQuant](https://arxiv.org/abs/2504.19874), Google ICLR 2026). We replace `random` with `golden angle θ_k = (2π/φ²)·(k+1)·φ^layer` — provably the most uniform angular distribution (Weyl 1916).
+KV-cache eats ~80% of LLM inference HBM. Industry uses **random rotation + 3-bit quantize** ([TurboQuant](https://arxiv.org/abs/2504.19874), Google ICLR 2026). We replace `random` with `golden angle θ_k = (2π/φ²)·(k+1)·φ^layer` — provably the most uniform angular distribution (Weyl 1916).
 
-The pipeline collapses to a **1.5 KB ROM-LUT** instead of an 8 MB random matrix and runs **bit-identical every time**. Static dataflow processors (Groq LPU, Cerebras WSE, TPU v6) execute it without a PRNG, without branch prediction, without cache misses.
+The pipeline collapses to a **1.5 KB ROM-LUT** instead of an 8 MB random matrix and runs **bit-identical every time**. Static dataflow processors (Groq LPU, Cerebras WSE, TPU v6) execute it without a PRNG, without branch prediction, without cache misses — and a **512-byte LUT fits in any PLC/FPGA register file**, putting LLM inference on satellite-constrained marine and offshore edge nodes.
 
-**v0.1.0** ships an upstream-faithful reference (this repo) plus **NQX-Core** — a complete pre-silicon emulator and chip development kit at [`nqx-core/`](nqx-core/): 21-opcode ISA, SystemVerilog RTL skeleton, Yosys + OpenLane (Skywater MPW path), ASIC floorplan and timing closure, FastAPI server, demo runner with side-by-side TurboQuant comparison, and 241 passing tests.
+**v0.1.0** ships an upstream-faithful reference (this repo) plus **NQX-Core** — a complete pre-silicon emulator and chip development kit at [`nqx-core/`](nqx-core/): 21-opcode ISA, SystemVerilog RTL skeleton, Yosys + OpenLane (Skywater MPW path), ASIC floorplan + timing closure, FastAPI server, demo runner with side-by-side TurboQuant comparison, **241 passing tests**.
 
 ---
 
@@ -40,7 +40,7 @@ The pipeline collapses to a **1.5 KB ROM-LUT** instead of an 8 MB random matrix 
 
 LLM inference is **memory-bound**, not compute-bound. KV-cache for a 7B model at 128K context = **64 GB FP16**, ~80% of HBM. Compression directly buys throughput.
 
-State of the art ([TurboQuant, Google ICLR 2026](https://arxiv.org/abs/2504.19874)): apply a random orthogonal rotation, then polar-quantize to 3 bits. It works — but the rotation matrix is **PRNG-derived**, requires GBs of state at scale, has only statistical (O(1/√N)) angular uniformity, and is impossible to map to deterministic-dataflow chips like Groq.
+State of the art ([TurboQuant, Google ICLR 2026](https://arxiv.org/abs/2504.19874)): random orthogonal rotation, then polar-quantize to 3 bits. It works — but the rotation matrix is **PRNG-derived**, requires GBs of state at scale, has only statistical (O(1/√N)) angular uniformity, and is impossible to map to deterministic-dataflow chips like Groq, Cerebras or shipboard PLCs.
 
 **We ask:** what if random chaos is replaced with the most-irrational angle in mathematics?
 
@@ -54,7 +54,7 @@ The rotation matrix is a product of **non-overlapping Givens pairs** with golden
 θ_k = (2π / φ²) × (k + 1) ≈ 137.5077640500° × (k + 1)
 ```
 
-This is the angle that governs sunflower seeds, the Nautilus shell spiral, and phyllotaxis. Hermann Weyl (1916) proved it has the slowest-converging continued fraction `[1; 1, 1, 1, …]` of any number, giving **angular discrepancy O(1/N)** — strictly better than the O(1/√N) of random rotation.
+This is the angle that governs sunflower seeds, the Nautilus shell spiral, and phyllotaxis. Hermann Weyl (1916) proved it has the slowest-converging continued fraction `[1; 1, 1, 1, …]` of any number, giving **angular discrepancy O(1/N)** — strictly better than O(1/√N) of random rotation.
 
 | Property                | Random Rotation (TurboQuant) | **Golden Rotation (NautilusQuant)**          |
 |-------------------------|-----------------------------|----------------------------------------------|
@@ -65,6 +65,7 @@ This is the angle that governs sunflower seeds, the Nautilus shell spiral, and p
 | LUT size (dim=1024)     | 8 MB                         | **~12 KB** (-666×)                           |
 | State at runtime        | seed + rotation matrix       | **0** (precomputed angles)                   |
 | Maps onto static dataflow ASIC? | No (random matmul) | **Yes** (Givens pipeline 1:1)                |
+| Audit trail (IMO/SOLAS) | Random — non-reproducible    | **Bit-identical, fully auditable**           |
 
 The matrix must be **orthogonal** so attention scores survive: `‖Tv‖ = ‖v‖`, `⟨Tq, Tk⟩ = ⟨q, k⟩`. v1 of this design included `φ^(-i/d)` centripetal scaling that broke orthogonality — fixed in v2 with pure Givens.
 
@@ -92,8 +93,7 @@ for k in range(dim // 2):
 for k in range((dim - 1) // 2):
     givens(v, 2*k+1, 2*k+2, GOLDEN_ANGLE * (k + 1) * φ)
 
-# Layer 3: butterfly with stride dim/4
-# (non-overlapping enforced via used-index tracking)
+# Layer 3: butterfly with stride dim/4 (non-overlapping pairs only)
 for k in range(dim):
     if not_overlapping(k):
         givens(v, k, (k + dim//4) % dim, GOLDEN_ANGLE * (k + 1) * φ²)
@@ -196,7 +196,65 @@ python demos/run_demo.py                   # TurboQuant vs NQX side-by-side
 | TurboQuant (random)                   | 3 + 1      | 4.0×        | 32 KB (dim=128) → 8 MB (dim=1024) | seed-dependent |
 | **NautilusQuant (φ)**                 | **3 + 1**  | **4.0×**    | **1.9 KB → 12 KB** | **bit-identical**  |
 
-`scale + zero-point` overhead is currently the same as TurboQuant (32 bit / group). Whether golden-angle rotation produces a tight enough output distribution to drop them entirely is the **open empirical question** — see proof tasks `T21–T26` in [`nqx-core/audits/prompts/heavy.md`](nqx-core/audits/prompts/heavy.md).
+`scale + zero-point` overhead currently matches TurboQuant (32 bit / group). Whether golden-angle rotation produces a tight enough output distribution to drop them entirely is the **open empirical question** — see proof tasks `T21–T26` in [`nqx-core/audits/prompts/heavy.md`](nqx-core/audits/prompts/heavy.md).
+
+---
+
+## Hardware fit
+
+The pipeline is a **static dataflow** — fixed schedule, zero data-dependent branches, no PRNG, LUT in constant memory. This is the execution model of next-gen inference accelerators that have no hardware scheduler:
+
+| Platform                         | Why it fits              | NQX status                   |
+|----------------------------------|--------------------------|------------------------------|
+| **Groq LPU** (Tensor Streaming)  | Fully static schedule, no HBM, 230 MB on-chip SRAM | architectural 1:1 mapping |
+| **Cerebras WSE-3**               | 44 GB on-chip SRAM, dataflow scheduling | architectural 1:1 mapping |
+| **Google TPU v5/v6 (Trillium)**  | Systolic MXU, XLA static schedule         | XLA path planned            |
+| **AWS Trainium 3** (3 nm)        | MXFP4 native + dataflow                   | MX fallback supported       |
+| **NVIDIA Blackwell B100/B200**   | MXFP4 / NVFP4 in tensor cores 5G          | Triton kernel works         |
+| **NVIDIA RTX 5090** (Blackwell)  | Same MXFP4 native                          | best price/perf for prototyping |
+| **AMD MI355X** (CDNA4)           | FP4 / FP6 native                          | ROCm + Triton path          |
+| **Skywater 130 nm**              | Open-source PDK, free MPW slots           | OpenLane2 config ready      |
+| **NVIDIA Jetson / Movidius**     | Edge GPU + 4–8 GB embedded RAM            | shipboard/IoT target        |
+| **PLCs / FPGAs with ≥ 4 KB ROM** | Constrained controllers, marine/industrial | 512-byte LUT fits in any register file |
+
+Random rotation does **not** map onto these chips cleanly — it requires a PRNG block and a multi-MB persistent matrix that defeats the on-chip-SRAM advantage and the size envelope of marine-grade controllers.
+
+---
+
+## Industrial Applications — shipboard edge AI
+
+NautilusQuant did not start as an academic curiosity. It started in the engine room.
+
+A modern ship power plant generates thousands of sensor readings per second — RPM, exhaust temperatures, fuel-injection pressure, lube-oil quality, vibration spectra, scavenge-port signatures. Satellite uplink between vessel and shore is **64–512 kbps** (VSAT or Iridium Certus) and shared with crew comms, ECDIS updates and IMO mandatory reporting. Pushing raw telemetry plus an LLM-based decision-support model uphill on that pipe is hopeless without aggressive, *deterministic* compression.
+
+| Constraint                          | How NautilusQuant addresses it                                              |
+|-------------------------------------|------------------------------------------------------------------------------|
+| **VSAT / Iridium uplink 64–512 kbps** | 4× deterministic compression of KV-cache and embeddings — fits in the link |
+| **Shipboard edge inference**        | KV-cache quantization runs LLMs on Jetson / Movidius / embedded GPUs       |
+| **IMO / SOLAS auditability**        | No PRNG seed → bit-identical results every voyage, classifiable evidence    |
+| **Resource-constrained controllers**| 512-byte LUT fits in any marine-grade PLC / FPGA register file              |
+| **Real-time safety constraints**    | SRAM-fused pipeline, sub-millisecond per-vector latency, no cache misses    |
+| **Static dataflow safety**          | Compatible with deterministic-scheduling RTOS, no branches, no PRNG, no DMA jitter |
+| **ONNX export**                     | Drops alongside predictive-maintenance models on shipboard nodes            |
+
+In practice this means a 3 B parameter condition-based-maintenance model can run on a ship with a Jetson Orin AGX, talk to shore over Iridium, and produce **bit-identical inference results** that satisfy class-society auditors (DNV, ABS, Lloyd's Register, RS).
+
+---
+
+## Author Portfolio — same problem domain, different layers of the stack
+
+NautilusQuant is one tool in a portfolio of marine condition-monitoring and decision-support projects:
+
+| Project              | Problem it solves                                                                                                        | Stack                                |
+|----------------------|--------------------------------------------------------------------------------------------------------------------------|--------------------------------------|
+| **ARGOS**            | Hull and tank inspections cost \$50–100 K and put humans at risk in confined spaces. Edge-AI + TRIZ reasoning automate it. | Python, Rust, ROS 2, ONNX             |
+| **POSEIDON-DIAG**    | Unplanned engine failure costs \$50 K–500 K/day. Real-time CAN-bus diagnostics + AI anomaly detection catch failures early. | Rust, Tauri, React, CAN bus           |
+| **TRITON-ML**        | Time-based PMS wastes 30–50 % of maintenance budget. ML predicts true equipment condition 2–4 weeks before classical alarms. | Python, XGBoost, PyTorch, SHAP        |
+| **SYNIZ**            | IMO 2030/2050 demands radical engineering innovation. 50 TRIZ agents debate contradictions to compress the R&D cycle.    | Python, FastAPI, Neo4j, D3.js         |
+| **AEGIS-MONITOR**    | Operators monitor 500+ parameters — alarm fatigue. 3D ship-model dashboard with intelligent prioritization.              | React, TypeScript, Three.js           |
+| **NautilusQuant** *(this repo)* | Satellite uplink is 64–512 kbps. 4× deterministic compression enables shipboard AI without cloud dependency.       | Python, PyTorch, Triton, SystemVerilog |
+
+The thread connecting all six: **condition-based, not time-based; deterministic, not probabilistic; auditable, not opaque** — the engineering ethics drilled into a marine engineer over a 4-year curriculum.
 
 ---
 
@@ -206,29 +264,10 @@ python demos/run_demo.py                   # TurboQuant vs NQX side-by-side
 |---|---|---|---|
 | **E1** | Software emulator + 21-opcode ISA + assembler | ✅ shipped | `nqx-core/nqx/`, 241 tests |
 | **E2** | RTL skeleton (Verilator + Yosys + OpenLane2 + SymbiYosys) | ✅ shipped | `nqx-core/rtl/` |
-| **E3** | FPGA bring-up (Alveo U280 / V80 / AWS F1) | ⏳ next | ~3 months, ~$7K |
-| **E4** | LLM stack integration (HF Cache / vLLM / Triton) | ⏳ on vast.ai | needs RTX 5090 / B200 — `nqx-core/audits/prompts/heavy-gpu.md` |
-| **E5** | Skywater 130 nm tape-out via Efabless Open MPW | ⏳ planned | $0 sponsored slots / $10K commercial |
-| **E6** | Commercial ASIC TSMC 12 / 7 nm | 🔮 future | $1.5–5 M depending on node |
-
----
-
-## Hardware fit
-
-The NautilusQuant pipeline is a **static dataflow** — fixed schedule, zero data-dependent branches, no PRNG, the LUT lives in constant memory. This is exactly the execution model of next-generation inference accelerators that have no hardware scheduler:
-
-| Platform                         | Why it fits              | NQX status                   |
-|----------------------------------|--------------------------|------------------------------|
-| **Groq LPU** (Tensor Streaming)  | Fully static schedule, no HBM, 230 MB on-chip SRAM | architectural 1:1 mapping |
-| **Cerebras WSE-3**               | 44 GB on-chip SRAM, dataflow scheduling | architectural 1:1 mapping |
-| **Google TPU v5/v6 (Trillium)**  | Systolic MXU, XLA-compiled static schedule | XLA path planned            |
-| **AWS Trainium 3** (3 nm)        | MXFP4 native + dataflow                  | MX fallback supported       |
-| **NVIDIA Blackwell B100/B200**   | MXFP4 / NVFP4 in tensor cores 5G          | Triton kernel works (CUDA)  |
-| **NVIDIA RTX 5090** (Blackwell consumer) | Same MXFP4 native               | best price/perf for prototyping |
-| **AMD MI355X** (CDNA4)           | FP4 / FP6 native                          | ROCm + Triton path          |
-| **Skywater 130 nm**              | Open-source PDK, free MPW slots           | OpenLane2 config ready      |
-
-Random rotation does **not** map onto these chips cleanly — it requires a PRNG block and a multi-MB persistent matrix that defeats the on-chip SRAM advantage. Golden rotation maps **for free**.
+| **E3** | FPGA bring-up (Alveo U280 / V80 / AWS F1)             | ⏳ next | ~3 months, ~$7K |
+| **E4** | LLM stack integration (HF Cache / vLLM / Triton kernel) | ⏳ on vast.ai | needs RTX 5090 / B200 — `nqx-core/audits/prompts/heavy-gpu.md` |
+| **E5** | Skywater 130 nm tape-out via Efabless Open MPW         | ⏳ planned | $0 sponsored slots / $10K commercial |
+| **E6** | Commercial ASIC TSMC 12 / 7 nm                         | 🔮 future | $1.5–5 M depending on node |
 
 ---
 
@@ -242,9 +281,9 @@ Three things can break the central thesis. Full analysis in [`RISKS.md`](RISKS.m
 | **0-overhead failure**  | Angle distribution not predictable enough → still need scale/zero-point | MX-Format fallback (0.25 bit/value overhead) |
 | **FP16 drift**          | Roundtrip errors accumulate over 100K-token contexts | Kahan summation / periodic renormalization |
 
-**Worst case:** even if all three risks materialize, the project still wins on determinism, dataflow-compatibility (Groq / Cerebras / TPU), 1.5 KB LUT, and full reproducibility — none of which TurboQuant offers.
+Even if all three risks materialize, the project still wins on determinism, dataflow-compatibility, 1.5 KB LUT, and full reproducibility — none of which TurboQuant offers.
 
-Experimental drop-in replacements live in [`plan_b/`](plan_b/) (`quasicrystal.py`, `golden_jl.py`, `phinary.py`, `fractal_hash.py`, `groq_dataflow.py`, `multimodal_spiral.py`). Marked experimental — not yet validated against the main pipeline.
+Experimental drop-in replacements live in [`plan_b/`](plan_b/) — `quasicrystal.py`, `golden_jl.py`, `phinary.py`, `fractal_hash.py`, `groq_dataflow.py`, `multimodal_spiral.py`. Untested, marked experimental.
 
 ---
 
@@ -297,11 +336,49 @@ For the **chip development kit**, jump to [`nqx-core/README.md`](nqx-core/README
 
 ---
 
+## About the Author
+
+**Herman Doronin** — Marine Engineer
+
+Marine engineer with 3+ years in ship power-plant maintenance: main-engine overhaul, turbocharger balancing, fuel-injector testing, piston-ring and scavenge-port inspection, auxiliary diesel servicing, planned-maintenance-system (PMS) execution.
+
+I build software that solves the problems I encountered hands-on — condition-based maintenance instead of fixed intervals, automated inspection of confined spaces, intelligent alarm prioritization instead of alarm fatigue. **NautilusQuant came directly out of one of those problems**: how to run modern AI on a ship with a 64–512 kbps satellite link.
+
+**Tech stack:** Rust for CAN-bus protocols (J1939, NMEA 2000). Python for ML, computer vision and edge inference. TypeScript for real-time monitoring dashboards. SystemVerilog + OpenLane for hardware (this project).
+
+### Education
+
+**Operation of Ship Power Plants — 4 years.** Marine power-plant operation, maintenance and diagnostics. Core curriculum: thermodynamics, marine diesel engines, steam turbines, auxiliary machinery, ship electrical systems, automation and control systems.
+
+### STCW International Certifications
+- ISPS Code — International Ship and Port Facility Security
+- Basic Safety Training (BST) — fire prevention & firefighting, personal survival, personal safety
+- Proficiency in Medical First Aid
+- Security Awareness Training
+
+### Domain Knowledge
+
+```
+Ship Power Plants     ██████████  Marine Diesel Engines
+Propulsion Systems    █████████░  Overhaul & Diagnostics
+Auxiliary Machinery   █████████░  Pumps, Compressors, Heat Exchangers
+Engine Control        ████████░░  ECU, Governor, Fuel Injection
+Dry-dock Operations   ████████░░  Inspection, Repair, Reporting
+```
+
+### Maritime Protocols & Automation
+`J1939` `NMEA 2000` `Modbus` `OPC UA` `CAN` `K-Line` `PLC`
+
+### Software & Tools
+`Python` `Rust` `TypeScript` `PyTorch` `Triton` `SystemVerilog` `Yosys` `OpenLane` `Docker` `Linux` `Git`
+
+---
+
 ## Citation
 
 ```bibtex
 @software{nautilusquant2026,
-  author = {ORTODOX1},
+  author = {Doronin, Herman},
   title  = {NautilusQuant: Deterministic Orthogonal KV-Cache Quantization
             via Golden Ratio Geometry},
   year   = {2026},
@@ -310,12 +387,12 @@ For the **chip development kit**, jump to [`nqx-core/README.md`](nqx-core/README
 }
 
 @software{nqxcore2026,
-  author = {NQX-Core contributors},
+  author = {Doronin, Herman and {NQX-Core contributors}},
   title  = {NQX-Core: Pre-silicon emulator and chip development kit
             for the NautilusQuant accelerator},
   year   = {2026},
   url    = {https://github.com/ORTODOX1/NautilusQuant/tree/main/nqx-core},
-  note   = {Built on NautilusQuant by ORTODOX1, MIT}
+  note   = {Built on NautilusQuant, MIT}
 }
 ```
 
@@ -327,6 +404,7 @@ Machine-readable: [`nqx-core/CITATION.cff`](nqx-core/CITATION.cff).
 
 **φ = 1.618 033 988 749 894 848 …**
 
-*The most irrational number meets the most memory-hungry algorithm.*
+*The most irrational number meets the most memory-hungry algorithm —*<br>
+*delivered from the engine room.*
 
 </div>
