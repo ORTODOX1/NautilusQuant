@@ -1,0 +1,92 @@
+[
+  {
+    "dim": 64,
+    "n_vec": 4096,
+    "phi": {
+      "rotation_pj": 6474956.800000001,
+      "polar_pj": 3381657.6000000006,
+      "quant_pj": 2411724.8000000003,
+      "qjl_pj": 1441792.0,
+      "pack_pj": 6553.6,
+      "memory_pj": 3303014.4,
+      "total_pj": 17019699.2,
+      "total_nj": 17019.6992,
+      "energy_nj_per_vec": 4.1552,
+      "cycles": 4109
+    },
+    "random": {
+      "rotation_pj": 76939264.0,
+      "rotation_memory_pj": 40960.0,
+      "rotation_prng_pj": 3276.8,
+      "polar_pj": 3381657.6000000006,
+      "quant_pj": 2411724.8000000003,
+      "qjl_pj": 1441792.0,
+      "pack_pj": 6553.6,
+      "memory_pj": 3303014.4,
+      "total_pj": 87528243.19999999,
+      "total_nj": 87528.24319999998,
+      "energy_nj_per_vec": 21.369199999999996,
+      "matrix_bytes": 8192
+    }
+  },
+  {
+    "dim": 128,
+    "n_vec": 4096,
+    "phi": {
+      "rotation_pj": 13018071.040000001,
+      "polar_pj": 6763315.200000001,
+      "quant_pj": 4823449.600000001,
+      "qjl_pj": 2883584.0,
+      "pack_pj": 13107.2,
+      "memory_pj": 6606028.8,
+      "total_pj": 34107555.84,
+      "total_nj": 34107.55584,
+      "energy_nj_per_vec": 8.32704,
+      "cycles": 4109
+    },
+    "random": {
+      "rotation_pj": 308228915.2,
+      "rotation_memory_pj": 163840.0,
+      "rotation_prng_pj": 13107.2,
+      "polar_pj": 6763315.200000001,
+      "quant_pj": 4823449.600000001,
+      "qjl_pj": 2883584.0,
+      "pack_pj": 13107.2,
+      "memory_pj": 6606028.8,
+      "total_pj": 329495347.2,
+      "total_nj": 329495.34719999996,
+      "energy_nj_per_vec": 80.44319999999999,
+      "matrix_bytes": 32768
+    }
+  },
+  {
+    "dim": 256,
+    "n_vec": 4096,
+    "phi": {
+      "rotation_pj": 26104299.520000003,
+      "polar_pj": 13526630.400000002,
+      "quant_pj": 9646899.200000001,
+      "qjl_pj": 5767168.0,
+      "pack_pj": 26214.4,
+      "memory_pj": 13212057.6,
+      "total_pj": 68283269.12,
+      "total_nj": 68283.26912000001,
+      "energy_nj_per_vec": 16.670720000000003,
+      "cycles": 4109
+    },
+    "random": {
+      "rotation_pj": 1233859379.2,
+      "rotation_memory_pj": 655360.0,
+      "rotation_prng_pj": 52428.8,
+      "polar_pj": 13526630.400000002,
+      "quant_pj": 9646899.200000001,
+      "qjl_pj": 5767168.0,
+      "pack_pj": 26214.4,
+      "memory_pj": 13212057.6,
+      "total_pj": 1276746137.6000001,
+      "total_nj": 1276746.1376000002,
+      "energy_nj_per_vec": 311.70560000000006,
+      "matrix_bytes": 131072
+    }
+  }
+]

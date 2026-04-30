@@ -1,0 +1,12 @@
+; Example 5: sub-bit split quantization (radius=3, angle=2)
+; After POLAR, quantize radius and angle with different bit widths.
+; Angles concentrate around golden-ratio multiples, so fewer bits suffice.
+; Compression: (3+2)/2 = 2.5 bits/value vs 3-bit uniform.
+LDV V0, [0x00000000]
+GVNS V0, 0
+GVNS V0, 1
+GVNS V0, 2
+POLAR V0
+SUBBIT_ENC V0, 3, 2
+STV V0, [0x10000000]
+HALT

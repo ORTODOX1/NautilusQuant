@@ -1,0 +1,146 @@
+[
+  {
+    "rotation": "phi",
+    "dim": 64,
+    "bits": 2,
+    "rmse_uniform": 0.721114456653595,
+    "rmse_lloyd_max": 0.37619471549987793,
+    "delta_pct": 91.68649290976788
+  },
+  {
+    "rotation": "none",
+    "dim": 64,
+    "bits": 2,
+    "rmse_uniform": 0.7429295778274536,
+    "rmse_lloyd_max": 0.3681541383266449,
+    "delta_pct": 101.79851330865364
+  },
+  {
+    "rotation": "phi",
+    "dim": 64,
+    "bits": 3,
+    "rmse_uniform": 0.3058546781539917,
+    "rmse_lloyd_max": 0.2052408903837204,
+    "delta_pct": 49.02229160191362
+  },
+  {
+    "rotation": "none",
+    "dim": 64,
+    "bits": 3,
+    "rmse_uniform": 0.3186928629875183,
+    "rmse_lloyd_max": 0.21050579845905304,
+    "delta_pct": 51.39386435928011
+  },
+  {
+    "rotation": "phi",
+    "dim": 64,
+    "bits": 4,
+    "rmse_uniform": 0.1432511955499649,
+    "rmse_lloyd_max": 0.1191299632191658,
+    "delta_pct": 20.247829915319276
+  },
+  {
+    "rotation": "none",
+    "dim": 64,
+    "bits": 4,
+    "rmse_uniform": 0.14684094488620758,
+    "rmse_lloyd_max": 0.12092622369527817,
+    "delta_pct": 21.430191400197764
+  },
+  {
+    "rotation": "phi",
+    "dim": 128,
+    "bits": 2,
+    "rmse_uniform": 0.6640787720680237,
+    "rmse_lloyd_max": 0.3567887246608734,
+    "delta_pct": 86.12661392235097
+  },
+  {
+    "rotation": "none",
+    "dim": 128,
+    "bits": 2,
+    "rmse_uniform": 0.6816263794898987,
+    "rmse_lloyd_max": 0.35528528690338135,
+    "delta_pct": 91.85325275664025
+  },
+  {
+    "rotation": "phi",
+    "dim": 128,
+    "bits": 3,
+    "rmse_uniform": 0.27994248270988464,
+    "rmse_lloyd_max": 0.19832777976989746,
+    "delta_pct": 41.15142267748757
+  },
+  {
+    "rotation": "none",
+    "dim": 128,
+    "bits": 3,
+    "rmse_uniform": 0.2863908112049103,
+    "rmse_lloyd_max": 0.19880419969558716,
+    "delta_pct": 44.05672095631653
+  },
+  {
+    "rotation": "phi",
+    "dim": 128,
+    "bits": 4,
+    "rmse_uniform": 0.1308797299861908,
+    "rmse_lloyd_max": 0.11281749606132507,
+    "delta_pct": 16.010135444813894
+  },
+  {
+    "rotation": "none",
+    "dim": 128,
+    "bits": 4,
+    "rmse_uniform": 0.13206228613853455,
+    "rmse_lloyd_max": 0.11353351920843124,
+    "delta_pct": 16.32008508085365
+  },
+  {
+    "rotation": "phi",
+    "dim": 256,
+    "bits": 2,
+    "rmse_uniform": 0.6104287505149841,
+    "rmse_lloyd_max": 0.3458130359649658,
+    "delta_pct": 76.51987838215169
+  },
+  {
+    "rotation": "none",
+    "dim": 256,
+    "bits": 2,
+    "rmse_uniform": 0.6189110279083252,
+    "rmse_lloyd_max": 0.3467813730239868,
+    "delta_pct": 78.472973479321
+  },
+  {
+    "rotation": "phi",
+    "dim": 256,
+    "bits": 3,
+    "rmse_uniform": 0.26710912585258484,
+    "rmse_lloyd_max": 0.19310657680034637,
+    "delta_pct": 38.3221277485282
+  },
+  {
+    "rotation": "none",
+    "dim": 256,
+    "bits": 3,
+    "rmse_uniform": 0.27008041739463806,
+    "rmse_lloyd_max": 0.19260665774345398,
+    "delta_pct": 40.223822249372446
+  },
+  {
+    "rotation": "phi",
+    "dim": 256,
+    "bits": 4,
+    "rmse_uniform": 0.1253548562526703,
+    "rmse_lloyd_max": 0.10952064394950867,
+    "delta_pct": 14.457742149928855
+  },
+  {
+    "rotation": "none",
+    "dim": 256,
+    "bits": 4,
+    "rmse_uniform": 0.12470520287752151,
+    "rmse_lloyd_max": 0.10875096172094345,
+    "delta_pct": 14.670436844059255
+  }
+]

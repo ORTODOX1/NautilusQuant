@@ -1,0 +1,38 @@
+; Example 4: attention score matrix in polar domain
+; Q and K vectors encoded, then dot products computed without decode.
+; ATTN_DOT uses: sum(r_q * r_k * cos(theta_q - theta_k)) per pair.
+
+; Load Q vectors (batch at 0x0)
+LDV V0, [0x00000000]
+LDV V1, [0x00000100]
+
+; Load K vectors (batch at 0x10000)
+LDV V2, [0x00010000]
+LDV V3, [0x00010100]
+
+; Encode Q vectors to polar
+GVNS V0, 0
+GVNS V0, 1
+GVNS V0, 2
+POLAR V0
+GVNS V1, 0
+GVNS V1, 1
+GVNS V1, 2
+POLAR V1
+
+; Encode K vectors to polar
+GVNS V2, 0
+GVNS V2, 1
+GVNS V2, 2
+POLAR V2
+GVNS V3, 0
+GVNS V3, 1
+GVNS V3, 2
+POLAR V3
+
+; Attention dot products (Q vs K)
+ATTN_DOT V0, V2        ; Q[0] · K[0]
+ATTN_DOT V0, V3        ; Q[0] · K[1]
+ATTN_DOT V1, V2        ; Q[1] · K[0]
+ATTN_DOT V1, V3        ; Q[1] · K[1]
+HALT

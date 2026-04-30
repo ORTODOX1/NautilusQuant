@@ -1,0 +1,39 @@
+cff-version: 1.2.0
+title: "NQX-Core: Pre-silicon emulator and chip development kit for the NautilusQuant golden-ratio KV-cache accelerator"
+message: "If you use this software, please cite it using the metadata from this file."
+type: software
+authors:
+  - name: "NQX-Core contributors"
+repository-code: "https://github.com/ORTODOX1/nqx-core"
+url: "https://github.com/ORTODOX1/nqx-core"
+abstract: >-
+  NQX-Core is a software emulator of a domain-specific processor for the
+  NautilusQuant pipeline (deterministic KV-cache quantization via golden-ratio
+  rotations). It includes the full instruction set architecture, an assembler,
+  a SystemVerilog RTL skeleton, ASIC floorplan and timing closure documents,
+  a FastAPI HTTP service with monitoring and chaos tests, a head-to-head
+  benchmark against TurboQuant, and a pre-silicon SDK with Yosys synthesis,
+  OpenLane configuration for Skywater 130nm MPW, and SymbiYosys formal
+  verification.
+license: MIT
+date-released: 2026-04-30
+version: "0.1.0"
+keywords:
+  - LLM inference
+  - KV-cache quantization
+  - golden ratio
+  - phi
+  - dataflow accelerator
+  - ASIC emulator
+  - hardware-software co-design
+  - NautilusQuant
+references:
+  - type: software
+    title: "NautilusQuant"
+    authors:
+      - given-names: ORTODOX1
+    url: "https://github.com/ORTODOX1/NautilusQuant"
+  - type: article
+    title: "TurboQuant: Online Quantization for KV-Cache via Random Orthogonal Rotation"
+    year: 2026
+    url: "https://arxiv.org/abs/2504.19874"

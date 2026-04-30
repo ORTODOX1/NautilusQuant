@@ -1,0 +1,20 @@
+#!/usr/bin/env python3
+"""Assemble .nqasm → .bin bytecode."""
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "../.."))
+from nqx.assembler import assemble
+from nqx.isa import pack_program
+
+def main():
+    if len(sys.argv) != 3:
+        print("Usage: nqx-asm input.nqasm output.bin", file=sys.stderr)
+        sys.exit(1)
+    with open(sys.argv[1]) as f:
+        prog = assemble(f.read())
+    blob = pack_program(prog)
+    with open(sys.argv[2], "wb") as f:
+        f.write(blob)
+    print(f"assembled {len(prog)} insns -> {len(blob)} bytes")
+
+if __name__ == "__main__":
+    main()

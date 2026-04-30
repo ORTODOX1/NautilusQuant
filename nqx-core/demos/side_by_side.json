@@ -1,0 +1,27 @@
+{
+  "n_vec": 1024,
+  "dim": 128,
+  "turbo": {
+    "rmse": 0.2818414270877838,
+    "cycles": 66698,
+    "cycles_per_vec": 65.134765625,
+    "energy_nj_total": 82493.44,
+    "energy_nj_per_vec": 80.56,
+    "state_bytes": 32768,
+    "deterministic_fraction": 0.0,
+    "deterministic_unique": 30,
+    "compressed_bytes": 65536
+  },
+  "nqx": {
+    "rmse": 0.286009281873703,
+    "cycles": 2066,
+    "cycles_per_vec": 2.017578125,
+    "energy_nj_total": 8526.88896,
+    "energy_nj_per_vec": 8.32704,
+    "state_bytes": 1910,
+    "deterministic_fraction": 1.0,
+    "deterministic_unique": 1,
+    "compressed_bytes": 65536
+  },
+  "runs": 30
+}

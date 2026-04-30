@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# nqx-heavy — Claude CLI on the project, primed for heavy tasks.
+# Claude reads CLAUDE.md automatically when launched in the project root.
+set -e
+PROJECT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$PROJECT"
+
+if pgrep -f "claude-desktop-bin" > /dev/null; then
+    echo "Claude Desktop running (~800MB RAM). Kill it? [y/N]"
+    read -r ans
+    if [[ "$ans" =~ ^[Yy]$ ]]; then
+        pkill -f "claude-desktop-bin"; sleep 1
+        echo "Claude Desktop stopped."
+    fi
+fi
+
+cat <<'BANNER'
+═══════════════════════════════════════════════════════════════════
+ NQX-Core / CLAUDE — HEAVY mode
+ Тяжёлые задачи: архитектура, ISA, RTL, vLLM/HF integration, ASIC
+
+ Claude автоматически прочитает CLAUDE.md при старте.
+
+ ⚡ Первое сообщение для отправки:
+ ─────────────────────────────────
+ Прочитай docs/PRD.md и audits/prompts/heavy.md.
+ Возьми первый незакрытый [ ] таск из heavy.md.
+ Объяви короткий план (1-3 строки) и начинай.
+ После таска: pytest tests -q должно проходить,
+ поставь [x] в heavy.md, переходи к следующему.
+ Молоти автономно — не спрашивай разрешения на каждый шаг.
+ ─────────────────────────────────
+
+ Логи + изменения видны прямо в этом терминале.
+═══════════════════════════════════════════════════════════════════
+BANNER
+echo
+exec claude "$@"

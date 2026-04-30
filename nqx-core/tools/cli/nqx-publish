@@ -1,0 +1,144 @@
+#!/usr/bin/env bash
+# nqx-publish — secure one-shot publish to GitHub.
+#
+# Reads the GitHub PAT from stdin via `read -s` (hidden, never echoed),
+# uses it only for one process invocation via $GH_TOKEN env var,
+# does NOT persist anything to ~/.config/gh/hosts.yml or .git/config.
+#
+# Usage (interactive):
+#     bash tools/cli/nqx-publish
+#
+# Usage (CI / script, token in env):
+#     GH_TOKEN=ghp_xxxxx bash tools/cli/nqx-publish
+#
+# After the script exits, no credentials remain on disk or in environment.
+set -euo pipefail
+
+REPO_NAME="${REPO_NAME:-nqx-core}"
+DESCRIPTION="${DESCRIPTION:-Pre-silicon emulator and chip development kit for the NautilusQuant golden-ratio KV-cache accelerator}"
+VISIBILITY="${VISIBILITY:-public}"
+
+PROJECT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$PROJECT"
+
+echo "═══════════════════════════════════════════════════════════"
+echo " NQX-Core → GitHub publish"
+echo " Repo:        ORTODOX1/$REPO_NAME ($VISIBILITY)"
+echo " Project dir: $PROJECT"
+echo " Description: $DESCRIPTION"
+echo "═══════════════════════════════════════════════════════════"
+echo
+
+# ---- preflight ----
+if ! command -v gh >/dev/null 2>&1; then
+    echo "ERROR: gh CLI not found."
+    echo "  Install: sudo pacman -S github-cli   (Arch / Manjaro)"
+    echo "  Or:      curl -sS https://webi.sh/gh | sh"
+    exit 1
+fi
+
+if [ ! -d .git ]; then
+    echo "ERROR: not a git repo. Run 'git init -b main && git add . && git commit ...' first."
+    exit 1
+fi
+
+if ! git log -1 >/dev/null 2>&1; then
+    echo "ERROR: no commits yet. Make initial commit first."
+    exit 1
+fi
+
+CURRENT_BRANCH=$(git symbolic-ref --short HEAD)
+LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "<none>")
+COMMIT=$(git log --oneline -1)
+
+echo "Branch:       $CURRENT_BRANCH"
+echo "Latest tag:   $LATEST_TAG"
+echo "HEAD commit:  $COMMIT"
+echo
+
+# ---- token acquisition (hidden input) ----
+if [ -z "${GH_TOKEN:-}" ]; then
+    echo "Paste a GitHub PAT below. Input is HIDDEN (no echo). It will:"
+    echo "  - be used ONLY for this one publish operation"
+    echo "  - NOT be saved to disk, history, or git config"
+    echo "  - be cleared from memory when this script exits"
+    echo
+    echo "Get a token: https://github.com/settings/tokens (scope: 'repo')"
+    echo
+    printf "GitHub PAT: "
+    read -rs GH_TOKEN
+    echo
+    if [ -z "$GH_TOKEN" ]; then
+        echo "ERROR: empty token, abort."
+        exit 1
+    fi
+fi
+
+export GH_TOKEN
+trap 'unset GH_TOKEN; history -d $(history 1 | awk "{print \$1}") 2>/dev/null || true' EXIT
+
+# Sanity check the token format
+if [[ ! "$GH_TOKEN" =~ ^(ghp_|github_pat_) ]]; then
+    echo "WARNING: token doesn't look like a GitHub PAT (expected ghp_* or github_pat_*)."
+    echo "Continuing anyway in 3 seconds, Ctrl+C to abort..."
+    sleep 3
+fi
+
+# ---- verify token works ----
+echo
+echo "[1/4] Verifying token..."
+USERNAME=$(gh api user --jq '.login' 2>/dev/null || echo "")
+if [ -z "$USERNAME" ]; then
+    echo "ERROR: token rejected by GitHub. Check scope (need 'repo') and validity."
+    exit 1
+fi
+echo "  ✓ Authenticated as: $USERNAME"
+
+# ---- check if repo already exists ----
+echo "[2/4] Checking if $USERNAME/$REPO_NAME exists..."
+if gh repo view "$USERNAME/$REPO_NAME" >/dev/null 2>&1; then
+    echo "  ⚠ Repo already exists: https://github.com/$USERNAME/$REPO_NAME"
+    echo "  Switching to push-only mode (won't recreate repo)."
+    REPO_EXISTS=1
+else
+    echo "  → Will create: $USERNAME/$REPO_NAME"
+    REPO_EXISTS=0
+fi
+
+# ---- create repo if needed ----
+if [ "$REPO_EXISTS" = "0" ]; then
+    echo "[3/4] Creating $USERNAME/$REPO_NAME..."
+    gh repo create "$REPO_NAME" \
+        --"$VISIBILITY" \
+        --source=. \
+        --remote=origin \
+        --push \
+        --description "$DESCRIPTION"
+    echo "  ✓ Created and pushed initial branch + tags"
+else
+    echo "[3/4] Pushing to existing repo..."
+    if ! git remote get-url origin >/dev/null 2>&1; then
+        git remote add origin "https://github.com/$USERNAME/$REPO_NAME.git"
+    fi
+    # Push using gh's credential helper (keeps token out of .git/config)
+    gh repo set-default "$USERNAME/$REPO_NAME" 2>/dev/null || true
+    git -c "credential.helper=!gh auth git-credential" push -u origin "$CURRENT_BRANCH"
+    git -c "credential.helper=!gh auth git-credential" push origin --tags
+    echo "  ✓ Pushed $CURRENT_BRANCH + tags"
+fi
+
+# ---- post-publish summary ----
+echo "[4/4] Done."
+echo
+echo "═══════════════════════════════════════════════════════════"
+echo " ✅ Published: https://github.com/$USERNAME/$REPO_NAME"
+echo
+echo " Releases:    https://github.com/$USERNAME/$REPO_NAME/releases"
+echo " Actions:     https://github.com/$USERNAME/$REPO_NAME/actions"
+echo " Tag $LATEST_TAG: https://github.com/$USERNAME/$REPO_NAME/releases/tag/$LATEST_TAG"
+echo
+echo " Token cleared from environment. Nothing persisted to disk."
+echo
+echo " Reminder: revoke this PAT now if you don't need it again:"
+echo "   https://github.com/settings/tokens"
+echo "═══════════════════════════════════════════════════════════"

@@ -1,0 +1,68 @@
+[
+  {
+    "model": "Llama-3-70B",
+    "config": {
+      "layers": 80,
+      "heads": 64,
+      "dim": 128,
+      "ctx": 131072
+    },
+    "kv_bytes_fp16": 343597383680,
+    "kv_bytes_nqx": 85899345920,
+    "kv_bytes_fp16_human": "320.00 GB",
+    "kv_bytes_nqx_human": "80.00 GB",
+    "compression_ratio": 4.0,
+    "h100_bytes_per_chip": 85899345920,
+    "nqx_bytes_per_chip": 25769803776,
+    "nqx_sram_bytes_per_chip": 104857600,
+    "h100_count": 4,
+    "nqx_count": 4,
+    "h100_hourly_usd": 10.0,
+    "nqx_hourly_usd": 0.2,
+    "savings_ratio": 50.0
+  },
+  {
+    "model": "Llama-3-8B",
+    "config": {
+      "layers": 32,
+      "heads": 32,
+      "dim": 128,
+      "ctx": 131072
+    },
+    "kv_bytes_fp16": 68719476736,
+    "kv_bytes_nqx": 17179869184,
+    "kv_bytes_fp16_human": "64.00 GB",
+    "kv_bytes_nqx_human": "16.00 GB",
+    "compression_ratio": 4.0,
+    "h100_bytes_per_chip": 85899345920,
+    "nqx_bytes_per_chip": 25769803776,
+    "nqx_sram_bytes_per_chip": 104857600,
+    "h100_count": 1,
+    "nqx_count": 1,
+    "h100_hourly_usd": 2.5,
+    "nqx_hourly_usd": 0.05,
+    "savings_ratio": 50.0
+  },
+  {
+    "model": "Llama-3-405B",
+    "config": {
+      "layers": 126,
+      "heads": 128,
+      "dim": 128,
+      "ctx": 131072
+    },
+    "kv_bytes_fp16": 1082331758592,
+    "kv_bytes_nqx": 270582939648,
+    "kv_bytes_fp16_human": "1008.00 GB",
+    "kv_bytes_nqx_human": "252.00 GB",
+    "compression_ratio": 4.0,
+    "h100_bytes_per_chip": 85899345920,
+    "nqx_bytes_per_chip": 25769803776,
+    "nqx_sram_bytes_per_chip": 104857600,
+    "h100_count": 13,
+    "nqx_count": 11,
+    "h100_hourly_usd": 32.5,
+    "nqx_hourly_usd": 0.55,
+    "savings_ratio": 59.090909090909086
+  }
+]

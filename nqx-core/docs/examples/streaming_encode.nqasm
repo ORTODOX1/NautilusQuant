@@ -1,0 +1,40 @@
+; Example 2: streaming manual encode — process vectors one by one
+; Each pipeline stage is explicit. Useful for per-vector control
+; (e.g., different quant bits per vector) or debugging intermediate stages.
+
+; Vector 0 — standard 3-bit
+LDV V0, [0x00000000]
+GVNS V0, 0
+GVNS V0, 1
+GVNS V0, 2
+POLAR V0
+MOV V1, V0
+QUANT V0, 3
+QJL V1, V0, 0x80
+PACK3 V1, V0
+STV V1, [0x10000000]
+
+; Vector 1 — higher precision (4-bit)
+LDV V0, [0x00000100]
+GVNS V0, 0
+GVNS V0, 1
+GVNS V0, 2
+POLAR V0
+MOV V1, V0
+QUANT V0, 4
+QJL V1, V0, 0x80
+PACK3 V1, V0
+STV V1, [0x10000100]
+
+; Vector 2 — aggressive quant (2-bit)
+LDV V0, [0x00000200]
+GVNS V0, 0
+GVNS V0, 1
+GVNS V0, 2
+POLAR V0
+MOV V1, V0
+QUANT V0, 2
+QJL V1, V0, 0x80
+PACK3 V1, V0
+STV V1, [0x10000200]
+HALT

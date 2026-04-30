@@ -1,0 +1,12 @@
+; Example 6: MXFP4 block quantization (OCP Microscaling)
+; Divides vector into 32-element blocks, shares 8-bit exponent per block.
+; Lower compute cost than Lloyd-Max + QJL, slightly lower quality.
+; Good for: latency-sensitive scenarios where quality loss is acceptable.
+LDV V0, [0x00000000]
+GVNS V0, 0
+GVNS V0, 1
+GVNS V0, 2
+POLAR V0
+MXPACK V0, MXFP4
+STV V0, [0x10000000]
+HALT

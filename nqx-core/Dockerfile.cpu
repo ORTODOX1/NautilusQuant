@@ -1,0 +1,29 @@
+ARG TARGETARCH
+FROM --platform=$TARGETPLATFORM python:3.11-slim AS cpu
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+ARG TARGETARCH
+ENV NQX_TARGETARCH=$TARGETARCH
+
+WORKDIR /app
+
+COPY requirements.txt ./
+RUN pip install --no-cache-dir --upgrade pip \
+ && pip install --no-cache-dir -r requirements.txt
+
+COPY nqx /app/nqx
+COPY server /app/server
+COPY programs /app/programs
+COPY tests /app/tests
+COPY run.py README.md ./
+
+ENV NQX_BACKEND=cpu NQX_DIM=128 NQX_BITS=3 PYTHONPATH=/app
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
+  CMD curl -fsS http://localhost:8000/health || exit 1
+
+CMD ["uvicorn", "server.api:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

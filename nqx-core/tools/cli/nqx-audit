@@ -1,0 +1,168 @@
+#!/usr/bin/env bash
+# nqx-audit — fan out a single prompt to multiple AI CLIs in parallel.
+# Usage:
+#   nqx-audit                           # show available prompts
+#   nqx-audit architecture              # one prompt, all CLIs
+#   nqx-audit architecture --only claude
+#   nqx-audit --all                     # every prompt × every CLI (token bonfire)
+set -euo pipefail
+
+PROJECT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+PROMPTS_DIR="$PROJECT/audits/prompts"
+RESULTS_DIR="$PROJECT/audits/results"
+LOGS_DIR="$PROJECT/audits/logs"
+mkdir -p "$RESULTS_DIR" "$LOGS_DIR"
+cd "$PROJECT"
+
+# All known CLIs: name → command-line that accepts -p "PROMPT"
+declare -A CLIS=(
+    [claude]="claude"
+    [deepseek]="/home/user/.local/bin/deepseek-cli"
+    [flash]="env DEEPSEEK_MODEL=deepseek-v4-flash /home/user/.local/bin/deepseek-cli"
+    [codex]="codex"
+)
+
+list_prompts() {
+    if [ ! -d "$PROMPTS_DIR" ]; then
+        echo "no prompts dir at $PROMPTS_DIR"
+        return
+    fi
+    echo "Available prompts (in $PROMPTS_DIR):"
+    for f in "$PROMPTS_DIR"/*.md; do
+        [ -e "$f" ] || continue
+        name=$(basename "$f" .md)
+        first=$(head -1 "$f" | sed 's/^# *//')
+        printf "  %-20s %s\n" "$name" "$first"
+    done
+}
+
+usage() {
+    cat <<EOF
+Usage: $(basename "$0") [PROMPT_NAME] [--only CLI] [--all]
+  PROMPT_NAME       prompt file name without .md (in audits/prompts/)
+  --only CLI        run on a single CLI: claude | deepseek | flash | codex
+  --all             run every prompt × every CLI (will burn tokens)
+  --list            show prompts and exit
+
+Examples:
+  $(basename "$0") architecture
+  $(basename "$0") correctness --only deepseek
+  $(basename "$0") --all
+
+EOF
+    list_prompts
+}
+
+run_one() {
+    local cli_name="$1"; local cli_cmd="$2"; local prompt_name="$3"
+    local prompt_file="$PROMPTS_DIR/$prompt_name.md"
+    local ts; ts=$(date +%Y%m%d-%H%M%S)
+    local out="$RESULTS_DIR/${cli_name}-${prompt_name}-${ts}.md"
+    local log="$LOGS_DIR/${cli_name}-${prompt_name}-${ts}.log"
+
+    {
+        echo "# Audit: $cli_name on \"$prompt_name\""
+        echo "**Started:** $(date '+%Y-%m-%d %H:%M:%S')"
+        echo "**Project:** $PROJECT"
+        echo
+        echo "---"
+        echo
+    } > "$out"
+
+    echo "  → $cli_name : $prompt_name (output: $out)"
+    if $cli_cmd -p "$(cat "$prompt_file")" >> "$out" 2>"$log"; then
+        echo "    [OK] $cli_name / $prompt_name"
+    else
+        ec=$?
+        echo "    [FAIL ec=$ec] $cli_name / $prompt_name (log: $log)" >&2
+        echo -e "\n\n## ERROR (exit $ec)\nSee $log" >> "$out"
+    fi
+}
+
+# --- arg parsing ---
+PROMPT=""; ONLY=""; ALL=0; SUMMARY=0
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -h|--help) usage; exit 0 ;;
+        --list) list_prompts; exit 0 ;;
+        --only) ONLY="$2"; shift 2 ;;
+        --all) ALL=1; shift ;;
+        --summary) SUMMARY=1; shift ;;
+        --*) echo "unknown flag: $1" >&2; usage; exit 1 ;;
+        *) PROMPT="$1"; shift ;;
+    esac
+done
+
+if [ "$ALL" = "0" ] && [ -z "$PROMPT" ]; then
+    usage; exit 0
+fi
+
+# Build list of (cli_name, cli_cmd) pairs we'll run
+declare -a SELECTED_CLIS=()
+if [ -n "$ONLY" ]; then
+    if [ -z "${CLIS[$ONLY]+x}" ]; then
+        echo "unknown cli: $ONLY (have: ${!CLIS[*]})" >&2; exit 1
+    fi
+    SELECTED_CLIS+=("$ONLY")
+else
+    for k in "${!CLIS[@]}"; do
+        if command -v "${CLIS[$k]%% *}" >/dev/null 2>&1 || [ -x "${CLIS[$k]%% *}" ]; then
+            SELECTED_CLIS+=("$k")
+        else
+            echo "skip $k: ${CLIS[$k]} not found" >&2
+        fi
+    done
+fi
+
+# Build list of prompts
+declare -a SELECTED_PROMPTS=()
+if [ "$ALL" = "1" ]; then
+    for f in "$PROMPTS_DIR"/*.md; do
+        [ -e "$f" ] || continue
+        SELECTED_PROMPTS+=("$(basename "$f" .md)")
+    done
+else
+    if [ ! -f "$PROMPTS_DIR/$PROMPT.md" ]; then
+        echo "prompt not found: $PROMPTS_DIR/$PROMPT.md" >&2
+        list_prompts; exit 1
+    fi
+    SELECTED_PROMPTS+=("$PROMPT")
+fi
+
+echo "═══════════════════════════════════════════════════════════"
+echo " nqx-audit"
+echo " Project:  $PROJECT"
+echo " CLIs:     ${SELECTED_CLIS[*]}"
+echo " Prompts:  ${SELECTED_PROMPTS[*]}"
+echo "═══════════════════════════════════════════════════════════"
+
+# Fan out: every (cli, prompt) pair runs in background, joined at the end
+declare -a JOBS=()
+for prompt in "${SELECTED_PROMPTS[@]}"; do
+    for cli in "${SELECTED_CLIS[@]}"; do
+        run_one "$cli" "${CLIS[$cli]}" "$prompt" &
+        JOBS+=($!)
+    done
+done
+
+echo
+echo "Spawned ${#JOBS[@]} jobs. Waiting..."
+for j in "${JOBS[@]}"; do
+    wait "$j" || true
+done
+
+echo
+echo "──────────────────────────────────────────────────────────"
+echo "Done. Latest results:"
+ls -t "$RESULTS_DIR" | head -"$(( ${#JOBS[@]} ))" | sed "s|^|  $RESULTS_DIR/|"
+
+if [ "$SUMMARY" = "1" ]; then
+    echo
+    echo "=== Summary (first 20 lines each) ==="
+    for f in "$RESULTS_DIR"/*.md; do
+        [ -e "$f" ] || continue
+        echo ""
+        echo "--- $(basename "$f") ---"
+        head -20 "$f"
+    done
+fi

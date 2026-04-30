@@ -1,0 +1,15 @@
+[options]
+mode bmc
+depth 8
+
+[engines]
+smtbmc
+
+[script]
+read_verilog -sv ../givens_lane.sv
+read_verilog -sv properties.sv
+prep -top properties
+
+[files]
+../givens_lane.sv
+properties.sv

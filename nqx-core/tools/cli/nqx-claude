@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Claude CLI scoped to the NQX-Core project.
+set -e
+PROJECT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$PROJECT"
+
+if pgrep -f "claude-desktop-bin" > /dev/null; then
+    echo "Claude Desktop running (~800MB RAM). Kill it? [y/N]"
+    read -r ans
+    if [[ "$ans" =~ ^[Yy]$ ]]; then
+        pkill -f "claude-desktop-bin"; sleep 1
+        echo "Claude Desktop stopped."
+    fi
+fi
+
+echo "═══════════════════════════════════════════════════════════"
+echo " NQX-Core / Claude CLI"
+echo " WorkDir: $PROJECT"
+echo "═══════════════════════════════════════════════════════════"
+echo
+exec claude "$@"
