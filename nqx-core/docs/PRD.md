@@ -1,146 +1,161 @@
 # NQX-Core — Product Requirements Document
 
-## 1. Vision одной строкой
+## 1. Vision in one line
 
-Специализированный процессор (NPU/ASIC-class) под пятистадийный pipeline
-NautilusQuant: детерминистическое квантование KV-кэша LLM через золотое сечение φ.
-NQX-Core = software-эмулятор → SystemVerilog RTL → FPGA-прототип → ASIC tape-out.
+A special-purpose processor (NPU/ASIC class) for the five-stage NautilusQuant
+pipeline: deterministic KV-cache quantization via the golden ratio φ.
+NQX-Core = software emulator → SystemVerilog RTL → FPGA prototype → ASIC tape-out.
 
-## 2. Что уже сделано (состояние на сейчас)
+## 2. Current state
 
-| Артефакт | Состояние |
+| Artifact | State |
 |---|---|
-| Software-эмулятор `nqx/` (≈1100 LOC, pure NumPy) | ✅ работает, 32 теста PASS |
-| ISA NQ-ISA v1 (16 opcodes, ассемблер) | ✅ |
-| Программы encode/decode на NQ-ASM | ✅ |
+| Software emulator `nqx/` (16 modules, pure NumPy) | ✅ works, 246 tests pass, 1 skipped |
+| NQ-ISA v2 (24 opcodes, assembler, disassembler) | ✅ |
+| NQ-ASM encode/decode programs | ✅ |
 | Acceptance: orthogonality 1.6e-7, roundtrip 9.6e-8 | ✅ |
-| Bit-exact vs upstream NautilusQuant math | ✅ (`tests/test_vs_reference.py`) |
-| HTTP-сервис (FastAPI, CPU+GPU backends) | ✅ |
-| Docker (CPU + CUDA images) + vast.ai инструкция | ✅ |
+| Matches upstream NautilusQuant math within 1e-4 | ✅ (`tests/test_vs_reference.py`) |
+| HTTP service (FastAPI, CPU + GPU backends) | ✅ |
+| Docker (CPU + CUDA images) + rented-GPU instructions | ✅ |
 | CLI launchers (`nqx-claude`, `nqx-deepseek`, `nqx-audit`, …) | ✅ |
-| **MXFP4 backend** (Concept 3 из upstream) | ⏳ TODO |
-| **Sub-bit ISA extension** (Concept 4) | ⏳ TODO |
-| **SystemVerilog RTL** (`rtl/`) | ⏳ TODO |
+| MXFP4 backend (Concept 3 from upstream) | ✅ emulated in `nqx/mx_unit.py` |
+| Sub-bit ISA extension (Concept 4) | ✅ emulated in `nqx/subbit_unit.py` |
+| CI (GitHub Actions) | ✅ `.github/workflows/nqx-core-ci.yml` |
+| **SystemVerilog RTL** (`rtl/`) | 🚧 **skeleton only** — hierarchy and interfaces exist; `polar_unit.sv` and `quant_unit.sv` contain placeholder datapaths (`x^y` / `x+y` instead of CORDIC; truncation instead of Lloyd-Max) |
+| Yosys / OpenLane / SymbiYosys flows | 🚧 configuration files only, never run to GDS or to a formal proof |
 | **vLLM / HuggingFace integration** | ⏳ TODO |
-| **Triton kernel в server/** | ⏳ TODO |
-| **CI (GitHub Actions)** | ⏳ TODO |
+| **Triton kernel inside `server/`** | ⏳ TODO |
+| FPGA bitstream, silicon | ❌ do not exist |
 
-## 3. Roadmap по этапам (E1-E6)
+## 3. Roadmap (E1–E6)
 
-| ID | Этап | Артефакт | Цель |
-|---|---|---|---|
-| E1 | Software-эмулятор | `nqx/`, `server/` | DONE |
-| E2 | RTL bit-exact | `rtl/*.sv` + Verilator testbench | RTL даёт тот же выход что Python для batch=1024 dim=128 |
-| E3 | FPGA bring-up | `rtl/build/` + Vivado project | Synthesizable на Alveo U280, ≥100 MHz, throughput ≥10 K vec/s |
-| E4 | LLM stack integration | `integrations/vllm_kvquant.py`, `integrations/hf_kv_hook.py` | Llama-3.1-8B inference с NQX KV-quant без потери качества |
-| E5 | ASIC floor-plan | `asic/floorplan.md`, `asic/timing.md` | TSMC 7nm, 50 mm², 1 GHz, готов к tape-out |
-| E6 | PCIe board bring-up | `firmware/`, kernel driver | Реальное устройство в Linux хосте через `/dev/nqx0` |
+| ID | Stage | Artifact | Goal | Status |
+|---|---|---|---|---|
+| E1 | Software emulator | `nqx/`, `server/` | Cycle-accurate emulation, bit-exact against the reference | ✅ done |
+| E2 | RTL bit-exact | `rtl/*.sv` + Verilator testbench | RTL produces the same output as Python for batch=1024, dim=128 | 🚧 skeleton — placeholder datapath, not bit-exact yet |
+| E3 | FPGA bring-up | `rtl/build/` + Vivado project | Synthesizable on Alveo U280, ≥100 MHz, throughput ≥10 K vec/s | ⏳ blocked on E2 |
+| E4 | LLM stack integration | `integrations/vllm_kvquant.py`, `integrations/hf_kv_hook.py` | Llama-3.1-8B inference with NQX KV-quant without quality loss | ⏳ not started |
+| E5 | ASIC floor-plan | `asic/floorplan.md`, `asic/timing.md` | TSMC 7 nm, 50 mm², 1 GHz, ready for tape-out | 🚧 paper study only |
+| E6 | PCIe board bring-up | `firmware/`, kernel driver | A real device in a Linux host via `/dev/nqx0` | 🔮 future |
 
-## 4. Архитектурные параметры (фиксированы)
+**E2 is explicitly not finished.** The RTL directory contains a synthesizable
+module hierarchy with correct interfaces and pipelining, and the build flows to
+drive it, but the arithmetic inside `polar_unit.sv` and `quant_unit.sv` is a
+placeholder. Any statement that RTL is "shipped" or bit-exact is wrong until
+those two datapaths are implemented and `tb_nqx.sv` checks them against the
+emulator.
 
-| Параметр | Значение | Можно менять? |
+## 4. Architecture parameters (fixed)
+
+| Parameter | Value | Changeable? |
 |---|---|---|
-| dim (KV-vector) | 128 default; supports {16,32,64,128,256,512} | да, через NQXConfig |
-| bits квантизация | 3 (Lloyd-Max) + 1 (QJL sign) | да, ISA рассчитан до 8 |
-| φ (golden ratio) | (1+√5)/2 = 1.618… | НЕТ, hard-coded |
-| L1 pairs | adjacent, 64 для dim=128 | НЕТ |
-| L2 pairs | shifted-by-1, 63 для dim=128 | НЕТ |
-| L3 pairs | butterfly stride dim/4 | НЕТ |
-| SIMD lanes | 64 (для 64 параллельных пар) | да, для будущего dim=256 ⇒ 128 lanes |
-| VRF | 16 × dim × FP32 | да |
-| Pipeline depth | 18 (steady-state 1 vec/cycle) | да, при оптимизации |
+| dim (KV vector) | 128 default; supports {16, 32, 64, 128, 256, 512} | yes, via `NQXConfig` |
+| Quantization bits | 3 (Lloyd-Max) + 1 (QJL sign) | yes, ISA supports up to 8 |
+| φ (golden ratio) | (1+√5)/2 = 1.618… | NO, hard-coded |
+| L1 pairs | adjacent, 64 for dim=128 | NO |
+| L2 pairs | shifted by 1, 63 for dim=128 | NO |
+| L3 pairs | butterfly, stride dim/4 | NO |
+| SIMD lanes | 64 (for 64 parallel pairs) | yes, dim=256 ⇒ 128 lanes |
+| VRF | 16 × dim × FP32 | yes |
+| Pipeline depth | 18 (steady state 1 vec/cycle, modelled) | yes, with optimization |
+| ROM-LUT | 10 B per Givens pair → 950 B (dim=64), 1 910 B (dim=128), 15 350 B (dim=1024) | derived from dim |
 
-## 5. Acceptance criteria (что проверяет CI)
+## 5. Acceptance criteria (checked by CI)
 
-| Проверка | Файл | Критерий |
+| Check | File | Criterion |
 |---|---|---|
 | `T^T·T = I` | `tests/test_orthogonality.py` | err < 1e-5 |
-| Roundtrip без квантизации | `tests/test_orthogonality.py` | RMSE < 1e-5 |
-| Bit-exact rotation vs reference | `tests/test_vs_reference.py` | max diff < 1e-4 |
-| ISA encode/decode | `tests/test_isa.py` | bit-exact roundtrip всех opcodes |
+| Roundtrip without quantization | `tests/test_orthogonality.py` | RMSE < 1e-5 |
+| Rotation vs reference implementation | `tests/test_vs_reference.py` | max abs diff < 1e-4 |
+| ISA encode/decode | `tests/test_isa.py` | bit-exact roundtrip of all opcodes |
 | Pipeline cycle counter | `tests/test_pipeline.py` | predicted == measured |
-| Pack/unpack 3+1 bit | `tests/test_roundtrip.py` | inverse точно |
-| Compression ratio | `tests/test_roundtrip.py` | == 4.00× ровно |
-| Все pytest | `pytest tests -q` | 0 failures, < 1 sec |
+| Pack/unpack 3+1 bit | `tests/test_roundtrip.py` | exact inverse |
+| Compression ratio | `tests/test_roundtrip.py` | == 4.00× exactly |
+| `tests/` suite (run by CI) | `pytest tests -q` | 241 collected, 0 failures, 1 skip |
+| Whole repo (adds `sdk/`, `firmware/`) | `pytest -q` from `nqx-core/` | 247 collected, 0 failures, 1 skip |
 
-**После любого PR/edit pytest должен проходить целиком.** Никаких xfail.
+**After any PR or edit the whole test suite must pass.** No xfail.
 
-## 6. Out of scope (не делаем)
+## 6. Out of scope
 
-- ❌ GUI (web index достаточно)
-- ❌ Тренировка / fine-tuning моделей — только inference KV-cache
-- ❌ Quantization < 4 эффективных бит (radius+angle): не помещается в roadmap
-- ❌ Поддержка не-NVIDIA / не-AMD GPU в server/backends.py
-- ❌ Распределённый inference (multi-GPU sharding) — отдельный проект
-- ❌ Visualization/3D (это в upstream `quantsim3d.html`)
+- ❌ GUI (the web index in the parent repo is enough)
+- ❌ Model training / fine-tuning — inference KV-cache only
+- ❌ Quantization below 4 effective bits (radius + angle)
+- ❌ Non-NVIDIA / non-AMD GPU support in `server/backends.py`
+- ❌ Distributed inference (multi-GPU sharding)
+- ❌ Visualization / 3D (that lives in the parent repo's `quantsim3d.html`)
 
-## 7. Правила работы (для AI агентов и людей)
+## 7. Working rules (for AI agents and humans)
 
-### Язык
-- Communication / commit messages explanations: **Russian**
-- Code / comments / docstrings / branch names: **English**
-- README на русском, docstrings (если требуются) — английские
+### Language
+- Code, comments, docstrings, branch names, commit messages: **English**
+- The English documentation set is `README.md`, `docs/PRD.md`, `docs/paper/`
+  and the parent repository's `README.md`. Some older documents
+  (`docs/architecture.md`, `docs/FINAL_REPORT.md`, `audits/`) are still Russian.
 
-### Стиль кода
-- Python ≥ 3.11, type hints обязательны для public API
-- NumPy 2.x; PyTorch и Triton — optional dependencies (только в server/backends.py и nautilus_triton.py)
-- **Не добавлять docstrings/comments если задача не просит явно**
-- Не добавлять speculative error handling
-- Не делать рефакторов вне scope таска
-- Не добавлять features которые не запрошены
+### Code style
+- Python ≥ 3.11, type hints required for public API
+- NumPy 2.x; PyTorch and Triton are optional dependencies (only in
+  `server/backends.py` and the upstream `nautilus_triton.py`)
+- **Do not add docstrings/comments unless the task explicitly asks**
+- No speculative error handling
+- No refactors outside the scope of the task
+- No unrequested features
 
-### Тесты
-- Каждый новый функциональный юнит → отдельный test_<unit>.py
-- Поломал acceptance — сначала почини, потом всё остальное
-- Бенчи в `python run.py bench`, не в pytest
+### Tests
+- Each new functional unit gets its own `test_<unit>.py`
+- If you break an acceptance test, fix it before anything else
+- Benchmarks go into `python run.py bench`, not into pytest
 
 ### Git
-- Бренчи: `feat/short-name`, `fix/...`, `chore/...`, `rtl/...`
-- Один логический change = один commit
-- Не амендим, не --force-push в main
+- Branches: `feat/short-name`, `fix/...`, `chore/...`, `rtl/...`
+- One logical change = one commit
+- No amends, no force-push to main
 
-## 8. Стек
+## 8. Stack
 
-| Слой | Что используется |
+| Layer | Technology |
 |---|---|
-| Core эмулятор | Python 3.11+, NumPy 2.x |
-| HTTP-сервис | FastAPI, Uvicorn, Pydantic 2.x |
-| GPU backend | PyTorch ≥2.2, Triton ≥2.2 (опционально) |
-| RTL | SystemVerilog, Verilator (sim), Vivado (synth) |
-| Тесты | pytest 8.x |
-| Контейнеры | Docker, docker-compose |
+| Core emulator | Python 3.11+, NumPy 2.x |
+| HTTP service | FastAPI, Uvicorn, Pydantic 2.x |
+| GPU backend | PyTorch ≥ 2.2, Triton ≥ 2.2 (optional) |
+| RTL | SystemVerilog, Verilator (sim), Yosys / OpenLane (synth) |
+| Tests | pytest 8.x |
+| Containers | Docker, docker-compose |
 
-## 9. Структура репо
+## 9. Repository layout
 
 ```
-nqx/                эмулятор (constants/lut/memory/FU/pipeline/cpu/isa/assembler/energy)
-programs/           NQ-ASM программы
-tests/              pytest
+nqx/                emulator (constants/lut/memory/FU/pipeline/cpu/isa/assembler/energy)
+programs/           NQ-ASM programs
+tests/              pytest — 46 files, 241 tests (6 more live in sdk/ and firmware/)
 server/             HTTP API
-deploy/             Docker, vast.ai инструкция
-docs/               architecture.md, PRD.md (этот файл)
-tools/cli/          launchers (nqx-claude, nqx-deepseek, nqx-audit, nqx-heavy, nqx-routine)
-audits/             prompts + результаты от AI-агентов
-rtl/                SystemVerilog (E2)            ← TODO
-integrations/       vLLM / HF / llama.cpp adapters (E4)  ← TODO
-asic/               floor-plan, timing reports (E5)      ← TODO
-firmware/           kernel driver, board bring-up (E6)   ← TODO
+deploy/             Docker, GPU host instructions
+docs/               architecture.md, PRD.md (this file), paper/
+tools/cli/          20 shell launchers
+audits/             AI-agent prompts and results (Russian)
+bench/              7 benchmark documents
+rtl/                SystemVerilog skeleton (E2)          ← placeholder datapath
+integrations/       vLLM / HF / llama.cpp notes (E4)     ← TODO
+asic/               floor-plan, timing study (E5)        ← paper only
+firmware/           boot ROM, driver skeleton (E6)       ← skeleton
 ```
 
-## 10. Метрики успеха к концу года
+## 10. Success metrics
 
-| Метрика | Цель | Сегодня |
+| Metric | Goal | Today |
 |---|---|---|
-| Throughput (RTX 5090) | > 1 M vec/s | TBD |
-| Throughput (FPGA Alveo U280) | > 100 K vec/s | — |
-| Compression | 4.00× | ✅ |
-| Bit-exact с upstream | 100% | ✅ |
-| Latency p99 | < 1 ms на 1024 vec batch | TBD |
-| Энергия per vec на ASIC 7nm | < 5 nJ | теоретически 5.1 nJ |
+| Throughput (RTX 5090) | > 1 M vec/s | not measured |
+| Throughput (FPGA Alveo U280) | > 100 K vec/s | not measured |
+| Compression | 4.00× | ✅ measured |
+| Match with the reference implementation | within 1e-4 | ✅ measured |
+| Latency p99 | < 1 ms per 1024-vector batch | not measured |
+| Energy per vector on 7 nm ASIC | < 5 nJ | 5.1 nJ from the analytical model in `nqx/energy.py` — no silicon |
+| Reconstruction quality vs random rotation | ≤ random | ❌ φ is 7.9 % worse — see `bench/phi_vs_random.md` |
 
-## 11. Ссылки
+## 11. Links
 
-- Upstream NautilusQuant: https://github.com/ORTODOX1/NautilusQuant
+- Upstream NautilusQuant: https://github.com/hermandoronin/NautilusQuant
 - OCP MX standard: https://www.opencompute.org/documents/ocp-mx-spec
 - TurboQuant: https://arxiv.org/abs/2504.19874
 - KIVI: https://arxiv.org/abs/2402.02750

@@ -99,7 +99,7 @@ sharding deferred).
 ## References
 
 - Ryltsov A., *NautilusQuant: Golden-Ratio KV-Cache Compression*, GitHub
-  ORTODOX1/NautilusQuant, 2025.
+  hermandoronin/NautilusQuant, 2025.
 - TurboQuant, *arXiv 2504.19874*, 2025.
 - Liu et al., *KIVI: Plug-and-Play 2bit KV-Cache Quantization*,
   arXiv 2402.02750.

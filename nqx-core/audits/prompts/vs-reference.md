@@ -3,7 +3,7 @@
 Сверь две реализации:
 
 **Моя:** `/home/user/nautilusquantcore/nqx/` (NQX-Core, pure-numpy эмулятор)
-**Upstream:** `https://github.com/ORTODOX1/NautilusQuant`, основные файлы:
+**Upstream:** `https://github.com/hermandoronin/NautilusQuant`, основные файлы:
 - `nautilus_triton.py` → `NautilusQuantPyTorch` (reference math)
 - `nautilus_hardware.py` → `NautilusFusedKernel`, `NautilusDataflow`, `NautilusWithMX`, `SubBitExperiment`
 - `validate_real_kv.py` (как тестируют на реальном KV-cache)

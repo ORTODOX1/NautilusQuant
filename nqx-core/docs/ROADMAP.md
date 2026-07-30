@@ -5,7 +5,7 @@
 │                                                                     │
 │  E1 ✅ Software emulator     ─────────────────────  v0.1.0 (NOW)    │
 │         │                                                           │
-│  E2 ✅ RTL skeleton          ─────────────────────  v0.1.0 (NOW)    │
+│  E2 🚧 RTL skeleton (placeholder datapath)  ───────  v0.1.0 (NOW)   │
 │         │                    (synthesizable, not yet placed&routed) │
 │         ▼                                                           │
 │  E3 ⏳ FPGA bring-up          ▒▒▒▒▒▒░░░░░░░░░░  3 months  ($7K)     │
@@ -33,11 +33,16 @@
 | Assembler ↔ Disassembler | `nqx/assembler.py`, `nqx/disassembler.py` |
 | 7 functional units | `nqx/functional_units.py` |
 | Energy model | `nqx/energy.py` |
-| 241 tests | `tests/` |
+| 247 tests (246 pass, 1 skip) | `tests/` |
 
 **Acceptance**: orthogonality 1.6e-7, roundtrip 9.6e-8, bit-exact vs upstream.
 
-## E2 — RTL skeleton ✅ DONE (v0.1.0)
+## E2 — RTL skeleton 🚧 IN PROGRESS (v0.1.0)
+
+> Module hierarchy, interfaces, pipelining and build flows exist.
+> `polar_unit.sv` and `quant_unit.sv` still contain placeholder datapaths
+> (`x^y` / `x+y` instead of CORDIC, truncation instead of Lloyd-Max),
+> so the RTL is **not** bit-exact against the emulator yet.
 
 | Artifact | Location |
 |---|---|

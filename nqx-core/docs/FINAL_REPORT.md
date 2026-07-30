@@ -172,7 +172,7 @@ RTL skeleton is ready; next step is `make synth` in Vivado and full place&route.
 
 ## Acknowledgments
 
-- **[@ORTODOX1](https://github.com/ORTODOX1)** — original NautilusQuant идея,
+- **[@hermandoronin](https://github.com/hermandoronin)** — original NautilusQuant идея,
   golden-angle insight, reference math, upstream `nautilus_triton.py` и
   `nautilus_hardware.py`. Без этого ничего бы не было.
 - **Hermann Weyl (1916)** — equidistribution theorem, математический фундамент

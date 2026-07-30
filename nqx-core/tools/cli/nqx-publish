@@ -23,7 +23,7 @@ cd "$PROJECT"
 
 echo "═══════════════════════════════════════════════════════════"
 echo " NQX-Core → GitHub publish"
-echo " Repo:        ORTODOX1/$REPO_NAME ($VISIBILITY)"
+echo " Repo:        hermandoronin/$REPO_NAME ($VISIBILITY)"
 echo " Project dir: $PROJECT"
 echo " Description: $DESCRIPTION"
 echo "═══════════════════════════════════════════════════════════"

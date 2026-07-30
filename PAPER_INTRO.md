@@ -53,7 +53,7 @@ The golden angle governs the arrangement of seeds in sunflowers, leaves on stems
 
 2. **Edge of Chaos Quantization**: The rotated coordinates exhibit emergent uniformity — appearing chaotic to the quantizer (destroying outlier clusters) while being perfectly ordered for the hardware (fully precomputable). This places NautilusQuant precisely at the "edge of chaos" — the regime where complex systems are most computationally powerful.
 
-3. **512-Byte Universe**: The entire rotation specification fits in a precomputed Look-Up Table of 512 bytes (64 cos/sin pairs), stored in register files or L0 cache. No PRNG, no seed storage, no runtime computation of trigonometric functions.
+3. **Kilobyte-Scale Rotation State**: The entire rotation specification fits in a precomputed Look-Up Table of 1 910 bytes at dim=128 (191 Givens pairs, 10 bytes each: two uint8 indices + FP32 cos + FP32 sin); 950 bytes at dim=64. Layer 1 alone is 512 bytes of cos/sin. No PRNG, no seed storage, no runtime computation of trigonometric functions.
 
 ### 1.5 Contributions
 

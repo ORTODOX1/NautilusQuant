@@ -7,13 +7,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 First public release. Built from scratch in one development cycle by parallel
 AI agents (Claude + DeepSeek-V4) coordinated through a structured task system in
-`audits/prompts/`. **102 tasks, 229 tests, 95 Python modules, 7 SystemVerilog
-modules, 70 markdown documents.**
+`audits/prompts/`. **102 tasks, 247 tests (246 pass, 1 skip), 16 emulator modules,
+5 SystemVerilog design modules + testbench.**
 
 ### Added
 
 #### Software emulator (`nqx/`)
-- NQ-ISA v2 spec with **21 opcodes** (NOP, LDV/LDV_ASYNC, STV, MOV, GVNS/GVNS_INV,
+- NQ-ISA v2 spec with **24 opcodes** (NOP, LDV/LDV_ASYNC, STV, MOV, GVNS/GVNS_INV,
   POLAR/IPOLAR, QUANT/DEQUANT, QJL/UNQJL, PACK3/UNPACK3, MXPACK/MXUNPACK,
   SUBBIT_ENC/SUBBIT_DEC, ENC/DEC macro, BARRIER, HALT, ATTN_DOT)
 - Functional units: GivensUnit, PolarUnit, QuantUnit, QJLUnit, PackUnit,
@@ -52,7 +52,7 @@ modules, 70 markdown documents.**
 - Deep health check with SHA-256 LUT hash, T^T·T self-test
 
 #### Production hardening (`tests/`, `tests/chaos/`, `tests/scenarios/`)
-- 46 test files, 229 tests passing in <20 sec
+- 46 test files under `tests/`, 247 tests repo-wide (246 pass, 1 skip) in <20 sec
 - Multi-turn chat session, long-context (64K), variable batch, multimodal,
   edge inputs (NaN/Inf)
 - Realistic Llama-like KV generator + golden snapshots + adversarial cases
@@ -113,10 +113,10 @@ modules, 70 markdown documents.**
 
 - [x] Orthogonality `T^T·T = I` error < 1e-6 (measured: 1.6e-7)
 - [x] Roundtrip without quantization RMSE < 1e-6 (measured: 9.6e-8)
-- [x] Bit-exact match against upstream NautilusQuant math (max diff < 1e-4)
+- [x] Matches upstream NautilusQuant math within 1e-4 (max abs diff)
 - [x] Compression ratio == 4.00× exactly
-- [x] Throughput == 1 vec / cycle steady-state
-- [x] All 229 pytest pass in < 20 seconds
+- [x] Throughput == 1 vec / cycle steady-state (emulator model)
+- [x] All 246 non-skipped pytest tests pass in < 20 seconds
 - [x] Roundtrip with 3+1-bit quantization MSE < 5e-2 on synthetic
 - [x] ROM-LUT < 2 KB for dim=128 (1 910 bytes)
 - [x] CI workflow green (.github/workflows/ci.yml)
@@ -154,7 +154,7 @@ NQX-Core wraps and emulates the upstream pipeline 1:1.
 
 ### Contributors
 
-- [@ORTODOX1](https://github.com/ORTODOX1) — original NautilusQuant insight,
+- [@hermandoronin](https://github.com/hermandoronin) — original NautilusQuant insight,
   reference math, upstream `nautilus_triton.py` and `nautilus_hardware.py`
 - AI agents: Claude (heavy) + DeepSeek-V4 (routine) + Codex (review)
 - Coordination via structured task lists in `audits/prompts/`

@@ -3,8 +3,8 @@
 ## TL;DR — local CPU-only
 
 ```bash
-git clone https://github.com/ORTODOX1/nqx-core
-cd nqx-core
+git clone https://github.com/hermandoronin/NautilusQuant
+cd NautilusQuant/nqx-core
 pip install -r requirements.txt
 python -m pytest tests -q     # 229 passing
 python run.py verify --dim 128
@@ -50,7 +50,7 @@ GPU stack (optional, for `server/backends.GPUBackend`):
 ### 1. Pip (development)
 
 ```bash
-git clone https://github.com/ORTODOX1/nqx-core && cd nqx-core
+git clone https://github.com/hermandoronin/NautilusQuant && cd NautilusQuant/nqx-core
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 pip install -e .          # if pyproject.toml present
@@ -58,24 +58,21 @@ pip install -e .          # if pyproject.toml present
 
 ### 2. Docker (CPU)
 
-```bash
-docker pull ghcr.io/ORTODOX1/nqx-server:cpu
-docker run --rm -p 8000:8000 ghcr.io/ORTODOX1/nqx-server:cpu
-curl http://localhost:8000/health
-```
-
-Or build locally:
+No prebuilt image is published. Build it locally:
 
 ```bash
 docker build -f Dockerfile.cpu -t nqx-server:cpu .
 docker run --rm -p 8000:8000 nqx-server:cpu
+curl http://localhost:8000/health
 ```
 
 ### 3. Docker (GPU, NVIDIA Container Toolkit required)
 
+No prebuilt image is published. Build it locally:
+
 ```bash
-docker pull ghcr.io/ORTODOX1/nqx-server:gpu
-docker run --rm --gpus all -p 8000:8000 ghcr.io/ORTODOX1/nqx-server:gpu
+docker build -f Dockerfile -t nqx-server:gpu .
+docker run --rm --gpus all -p 8000:8000 nqx-server:gpu
 ```
 
 ### 4. CLI launchers (KDE / GNOME)
@@ -148,7 +145,7 @@ pip install -e .
 Either set `NQX_BACKEND=cpu`, or clone the upstream into the search path:
 
 ```bash
-git clone https://github.com/ORTODOX1/NautilusQuant /tmp/naut
+git clone https://github.com/hermandoronin/NautilusQuant /tmp/naut
 export PYTHONPATH=/tmp/naut:$PYTHONPATH
 ```
 

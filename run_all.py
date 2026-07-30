@@ -511,7 +511,7 @@ if __name__ == "__main__":
 ╔══════════════════════════════════════════════════════════════════╗
 ║     NautilusQuant v2 — Deterministic Self-Organization          ║
 ║     KV-Cache Quantization via Golden Ratio Geometry              ║
-║     github.com/ORTODOX1/NautilusQuant                           ║
+║     github.com/hermandoronin/NautilusQuant                           ║
 ╚══════════════════════════════════════════════════════════════════╝
 """)
 

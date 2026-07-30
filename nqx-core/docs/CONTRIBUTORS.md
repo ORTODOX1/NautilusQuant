@@ -7,7 +7,7 @@ every artifact is auditable.
 
 | Person | Role | Contribution |
 |---|---|---|
-| **[@ORTODOX1](https://github.com/ORTODOX1)** | Originator | NautilusQuant insight — using the golden angle (Weyl equidistribution, 1916) instead of random rotation for KV-cache compression. Reference math in [`nautilus_triton.py`](https://github.com/ORTODOX1/NautilusQuant/blob/main/nautilus_triton.py) and [`nautilus_hardware.py`](https://github.com/ORTODOX1/NautilusQuant/blob/main/nautilus_hardware.py). NQX-Core is fundamentally an emulator and hardware design kit on top of his algorithm. |
+| **[@hermandoronin](https://github.com/hermandoronin)** | Originator | NautilusQuant insight — using the golden angle (Weyl equidistribution, 1916) instead of random rotation for KV-cache compression. Reference math in [`nautilus_triton.py`](https://github.com/hermandoronin/NautilusQuant/blob/main/nautilus_triton.py) and [`nautilus_hardware.py`](https://github.com/hermandoronin/NautilusQuant/blob/main/nautilus_hardware.py). NQX-Core is fundamentally an emulator and hardware design kit on top of his algorithm. |
 
 ## Engineering build (this repo)
 

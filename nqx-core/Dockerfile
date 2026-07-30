@@ -11,7 +11,7 @@ COPY requirements.txt requirements-gpu.txt ./
 RUN python3 -m pip install --no-cache-dir --upgrade pip \
  && python3 -m pip install --no-cache-dir -r requirements-gpu.txt
 
-RUN git clone --depth=1 https://github.com/ORTODOX1/NautilusQuant.git /opt/nautilusquant
+RUN git clone --depth=1 https://github.com/hermandoronin/NautilusQuant.git /opt/nautilusquant
 ENV PYTHONPATH=/app:/opt/nautilusquant
 
 COPY nqx /app/nqx

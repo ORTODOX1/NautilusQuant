@@ -77,7 +77,7 @@ the dominant footprint and the savings compound.
 | **vLLM / SGLang clusters** | KV swap to host RAM kills throughput at long ctx | 4× compression keeps KV in HBM, attention stays at peak |
 | **llama.cpp on CPU/Mac M-series** | Mac unified memory limits ctx | 4× extends ctx into the same memory budget |
 | **Edge AI (Jetson Orin, Apple Neural Engine)** | Tiny on-die SRAM | A 1.9 KB ROM beats a 32 KB random matrix |
-| **On-device LLM (phone, IoT)** | No room for a PRNG state | Deterministic encoder fits a 512-byte LUT for dim=64 |
+| **On-device LLM (phone, IoT)** | No room for a PRNG state | Deterministic encoder fits a 950-byte LUT for dim=64 |
 
 ## WHY a chip — the architecture argument
 

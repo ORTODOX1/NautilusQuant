@@ -5,18 +5,18 @@
 **Pre-silicon emulator and chip development kit for the NautilusQuant
 golden-ratio KV-cache accelerator.**
 
-[![Tests](https://img.shields.io/badge/tests-229_passing-brightgreen?style=for-the-badge)](tests)
-[![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)](LICENSE)
+[![Tests](https://img.shields.io/badge/tests-246_passing%2C_1_skipped-brightgreen?style=for-the-badge)](tests)
+[![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)](../LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-green?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org)
 [![NumPy](https://img.shields.io/badge/numpy-2.x-013243?style=for-the-badge&logo=numpy&logoColor=white)](https://numpy.org)
-[![Status](https://img.shields.io/badge/status-pre--silicon-orange?style=for-the-badge)](docs/PRD.md)
+[![Status](https://img.shields.io/badge/status-software%20only-orange?style=for-the-badge)](docs/PRD.md)
 
 **[Quick start](#quick-start)** ·
-**[Pitch deck](demos/pitch.md)** ·
-**[Why it works](demos/why_it_works.md)** ·
-**[Architecture](docs/architecture.md)** ·
+**[What is real](#what-is-real-and-what-is-not)** ·
+**[Numbers](#numbers)** ·
+**[Architecture](#architecture-one-picture)** ·
 **[Paper draft](docs/paper/)** ·
-**[Roadmap](docs/PRD.md#3-roadmap-по-этапам-e1-e6)**
+**[Roadmap](docs/PRD.md#3-roadmap-e1e6)**
 
 </div>
 
@@ -24,84 +24,88 @@ golden-ratio KV-cache accelerator.**
 
 ## TL;DR
 
-NQX-Core — software-эмулятор специализированного процессора для
-[NautilusQuant](https://github.com/ORTODOX1/NautilusQuant), детерминистического
-сжатия KV-кэша LLM в 4× через **золотое сечение φ**. Алгоритм правильный — нужен
-**правильный процессор**: static dataflow ASIC с 1.5 KB ROM-LUT вместо 8 MB
-random rotation matrix как у TurboQuant.
+NQX-Core is a software emulator of a special-purpose processor for
+[NautilusQuant](https://github.com/hermandoronin/NautilusQuant) — 4× deterministic
+KV-cache compression built on golden-angle (φ) Givens rotations. The point of the
+design is that the rotation collapses into a **1 910-byte ROM at dim=128**
+instead of the 32 KB random matrix a TurboQuant-style rotation needs (2 MB at
+dim=1024), and that the output is bit-identical on every run.
 
-В пакете: ISA + ассемблер + дизассемблер, 7 functional units, **SystemVerilog
-RTL skeleton**, Verilator + Yosys + OpenLane (путь к Skywater MPW),
-ASIC floor-plan + timing closure docs, FastAPI HTTP-сервер с мониторингом и
-chaos-тестами, demo runner с pitch deck, **6 proof-документов** с числами против
-TurboQuant.
+The package contains: ISA + assembler + disassembler, functional-unit models,
+a **SystemVerilog RTL skeleton**, Verilator / Yosys / OpenLane build files
+(a path towards a Skywater MPW shuttle), ASIC floorplan and timing notes,
+a FastAPI HTTP server with monitoring and chaos tests, a demo runner, and
+7 benchmark documents with numbers against a TurboQuant emulation.
 
-## Why this matters
+## What is real, and what is not
+
+| | Status |
+|---|---|
+| Cycle-accurate NumPy emulator, ISA, assembler/disassembler | **Real, tested** (246 passing tests) |
+| Functional-unit math (Givens, polar, Lloyd-Max, QJL, pack, MX, sub-bit) | **Real, tested** against the upstream reference |
+| FastAPI service, metrics, chaos tests, Docker images | **Real** |
+| Benchmarks in `bench/`, demos in `demos/` | **Real**, all on synthetic KV-like data |
+| SystemVerilog RTL | **Skeleton.** `polar_unit.sv` computes `x^y` / `x+y` where CORDIC belongs; `quant_unit.sv` truncates instead of applying Lloyd-Max. Hierarchy, interfaces and pipelining are real; the arithmetic is a placeholder. |
+| Yosys / OpenLane / SymbiYosys flows | Configuration files exist; never run to GDS or to a formal proof |
+| ASIC floorplan, timing, tape-out checklist in `asic/` | Paper study, no PDK run behind it |
+| Cycle counts and energy figures | **Analytical model** in `nqx/pipeline.py` + `nqx/energy.py`, not measurement |
+| FPGA bitstream, silicon | **Do not exist** |
+
+## Why this design
 
 | | TurboQuant (Google ICLR 2026) | **NQX / NautilusQuant** |
 |---|---|---|
-| **Подход** | random rotation matrix + PRNG | **deterministic Givens × φ** |
-| **LUT / state size (dim=128)** | 32 KB matrix | **1.5 KB ROM** |
-| **LUT scaling (dim=1024)** | 8 MB | **~12 KB** (-666×) |
+| **Approach** | random rotation matrix + PRNG | **deterministic Givens × φ** |
+| **Rotation state (dim=128)** | 32 KB FP16 matrix | **1 910 B ROM** |
+| **Rotation state (dim=1024)** | 2 MB FP16 matrix | **15 350 B ROM** (137× smaller) |
 | **Determinism** | seed-dependent | **bit-identical always** |
-| **PRNG cost** | ~4 cycles × dim² | **0 cycles** (precomputed) |
-| **Hardware fit** | GPU-bound (random matmul) | **static dataflow ASIC** (1:1 с pipeline) |
+| **PRNG cost** | proportional to `dim²` per matrix | **0** (precomputed constants) |
+| **Hardware fit** | dense random matmul | **static dataflow**, 1:1 with the pipeline |
 | **Compression ratio** | 4× | **4×** (equal) |
-| **Roundtrip RMSE on synthetic KV** | comparable | **comparable** |
+| **Reconstruction RMSE** | **better by 7.9 %** | worse — see [`bench/phi_vs_random.md`](bench/phi_vs_random.md) |
 
-> **Главный месседж**: «Нужно перестать кроить алгоритмы под GPU. Алгоритм
-> правильный — нужен правильный процессор. Вот он, эмулирован, готов к tape-out.»
-
-## What we shipped
-
-| Слой | Что готово | Где |
-|---|---|---|
-| **Software emulator** | ISA NQ-ISA v2 (21 opcode), ассемблер, дизассемблер, 7 functional units | `nqx/` |
-| **RTL skeleton** | 7 SystemVerilog модулей + Verilator testbench + Yosys synth + OpenLane config | `rtl/` |
-| **ASIC docs** | Floor-plan (50 mm² TSMC 7nm) + timing closure (1 GHz target) + tape-out checklist | `asic/` |
-| **HTTP service** | FastAPI с auto CPU/GPU backend, /encode /decode /benchmark /verify /metrics /health/deep | `server/` |
-| **Production** | Middleware logging, Prometheus metrics, structured errors, chaos tests, smoke test, load test | `server/`, `tests/chaos/` |
-| **Demo / pitch** | TurboQuant baseline, 70B scaling, side-by-side, why-it-works, 10-slide pitch | `demos/` |
-| **Proof tasks** | Angular uniformity, linear vs Lloyd-Max, φ vs random, determinism, LUT budget, energy delta | `bench/` |
-| **Pre-silicon SDK** | Random Instr Gen, coverage tracking, performance counters, JTAG debug, formal verification (SymbiYosys) | `nqx/`, `rtl/formal/` |
-| **CLI tools** | 16 launchers (`nqx-claude`, `nqx-deepseek`, `nqx-audit`, `nqx-demo`, `nqx-debug`, …) | `tools/cli/` |
-| **Deploy** | Multi-arch Docker (amd64+arm64) + GPU image + vast.ai automation | `deploy/`, `Dockerfile*` |
+The last row is the honest headline: on quality, the golden angle **loses** to a
+random orthogonal matrix on synthetic outlier-heavy data. What it buys instead is
+a 17–137× smaller rotation state, zero runtime state and bit-exact
+reproducibility. Whether that trade is worth ~8 % extra RMSE depends on the
+deployment, and this repo does not pretend to answer that for you.
 
 ## Quick start
 
 ```bash
-# Clone & install
-git clone https://github.com/<you>/nqx-core && cd nqx-core
+git clone https://github.com/hermandoronin/NautilusQuant
+cd NautilusQuant/nqx-core
 pip install -r requirements.txt
 
-# Run all 229 tests
-python -m pytest tests -q
+# Run the whole suite (247 collected: 246 pass, 1 skip)
+# CI runs `pytest tests -q`, which collects 241 (sdk/ and firmware/ excluded)
+python -m pytest -q
 
-# Verify acceptance (orthogonality, roundtrip, bit-exact vs reference)
+# Verify acceptance criteria (orthogonality, roundtrip, match vs reference)
 python run.py verify --dim 128
 
-# Benchmark cycles + throughput + energy
+# Benchmark cycles + throughput + energy (emulator model)
 python run.py bench --vectors 4096
 
-# Run encode pipeline as NQ-ASM program
+# Run the encode pipeline as an NQ-ASM program
 python run.py run programs/encode_dim128.nqasm --vectors 1000
 
-# Show demo (TurboQuant vs NautilusQuant side-by-side)
+# Show the demo (TurboQuant vs NautilusQuant side-by-side)
 python demos/run_demo.py
 ```
 
-### Run as HTTP API
+### Run as an HTTP API
 
 ```bash
 # Local CPU
 docker compose --profile cpu up
 curl http://localhost:8000/health
 
-# vast.ai with RTX 5090 (one command)
+# Rented GPU host
 bash deploy/quickstart-vastai.sh
 ```
 
-See [`deploy/vastai.md`](deploy/vastai.md) for full deployment guide.
+See [`deploy/vastai.md`](deploy/vastai.md) for the full deployment guide.
 
 ## Architecture (one picture)
 
@@ -132,56 +136,64 @@ See [`deploy/vastai.md`](deploy/vastai.md) for full deployment guide.
                  └──────────┘    └──────────┘
                        ^
                  ┌──────┴───┐
-                 │ ROM LUT  │  golden angle cos/sin (≈1.5 KB)
+                 │ ROM LUT  │  golden angle cos/sin, 1 910 B
                  │ 191 pair │
                  └──────────┘
 ```
 
-Pipeline: **18 cycles** depth, **1 vec / cycle** steady-state throughput.
-Detailed spec: [`docs/architecture.md`](docs/architecture.md).
+Pipeline: **18 cycles** depth, **1 vec / cycle** steady-state throughput — both
+from the emulator's cycle model. Detailed spec: [`docs/architecture.md`](docs/architecture.md)
+(written in Russian).
 
-## Numbers (measured, not promised)
+## Numbers
 
-| Метрика | Значение | Источник |
-|---|---|---|
-| Orthogonality `T^T·T = I` (dim=128) | err ≤ **1.6e-7** | `tests/test_orthogonality.py` |
-| Roundtrip без квантования (RMSE) | **9.6e-8** | `tests/test_orthogonality.py` |
-| Bit-exact vs upstream NautilusQuant math | max diff < **1e-4** | `tests/test_vs_reference.py` |
-| Compression ratio | **4.00×** ровно | `tests/test_roundtrip.py` |
-| Throughput steady-state | **1 vec / cycle** | cycle counter в эмуляторе |
-| ROM-LUT size (dim=128) | **1 910 bytes** | `nqx/lut.py` |
-| Pipeline depth | **18 cycles** | `docs/architecture.md` |
-| Determinism (100 runs same input) | **100% bit-identical** | `bench/determinism.md` |
-| Energy per encode-vec (TSMC 7nm est.) | ≈ **5.1 nJ** | `nqx/energy.py` model |
-| Number of NQ-ISA opcodes | **21** | `nqx/isa.py` |
-| Tests passing | **229 / 229** | `pytest tests -q` |
+`measured` = produced by running code in this repo. `model` = produced by the
+analytical cycle/energy model in `nqx/pipeline.py` and `nqx/energy.py`; no
+silicon, FPGA or GPU wall-clock measurement backs those rows.
+
+| Metric | Value | Kind | Source |
+|---|---|---|---|
+| Orthogonality `T^T·T = I` (dim=128) | err ≤ **1.6e-7** | measured | `tests/test_orthogonality.py` |
+| Roundtrip without quantization (RMSE) | **9.6e-8** | measured | `tests/test_orthogonality.py` |
+| Matches upstream NautilusQuant math | within **1e-4** max abs diff | measured | `tests/test_vs_reference.py` |
+| Compression ratio | exactly **4.00×** | measured | `tests/test_roundtrip.py` |
+| ROM-LUT size (dim=64 / 128 / 1024) | **950 / 1 910 / 15 350 bytes** | measured | `nqx/lut.py`, [`bench/lut_budget.md`](bench/lut_budget.md) |
+| Determinism (100 runs, same input) | **100 % bit-identical** | measured | [`bench/determinism.md`](bench/determinism.md) |
+| φ vs random rotation, reconstruction | **φ 7.9 % worse** (0.1429 vs 0.1325 RMSE) | measured | [`bench/phi_vs_random.md`](bench/phi_vs_random.md) |
+| φ vs random rotation, compute cycles | **88.9 % fewer** | model | [`bench/phi_vs_random.md`](bench/phi_vs_random.md) |
+| Number of NQ-ISA opcodes | **24** | measured | `nqx/isa.py` |
+| Tests | **246 passed, 1 skipped** (247 collected) | measured | `pytest -q` |
+| Throughput steady-state | **1 vec / cycle** | model | emulator cycle counter |
+| Pipeline depth | **18 cycles** | model | `docs/architecture.md` |
+| Energy per encode-vec (TSMC 7 nm assumptions) | ≈ **5.1 nJ** | model | `nqx/energy.py` |
 
 ## Roadmap
 
 ```
-E1 ✅ Software emulator (NQX-Core)              ← DONE
-E2 ✅ RTL skeleton + Verilator + Yosys synth   ← DONE
-E3 ⏳ FPGA bring-up (Alveo U280 / AWS F1)       ← 3 months
-E4 ⏳ vLLM / HF / llama.cpp integration         ← 3-6 months (T10-T12 на vast.ai)
-E5 ⏳ Skywater 130nm MPW via Efabless ($0)      ← 6-9 months
-E6 ⏳ TSMC 12nm / 7nm tape-out ($1.5-5M)        ← 12-18 months
+E1 ✅ Software emulator (NQX-Core)                    ← DONE
+E2 🚧 RTL skeleton — placeholder datapath in
+      polar_unit.sv / quant_unit.sv                   ← IN PROGRESS
+E3 ⏳ FPGA bring-up (Alveo U280 / AWS F1)             ← blocked on E2
+E4 ⏳ vLLM / HF / llama.cpp integration               ← not started
+E5 ⏳ Skywater 130nm MPW via Efabless                 ← planned
+E6 ⏳ TSMC 12nm / 7nm tape-out                        ← future
 ```
 
-Подробно: [`docs/PRD.md`](docs/PRD.md), [`asic/floorplan.md`](asic/floorplan.md),
+Details: [`docs/PRD.md`](docs/PRD.md), [`asic/floorplan.md`](asic/floorplan.md),
 [`asic/timing.md`](asic/timing.md), [`asic/tapeout_checklist.md`](asic/tapeout_checklist.md).
 
 ## Project layout
 
 ```
-nqx/                  Software emulator core (95 Python modules)
+nqx/                  Software emulator core (16 Python modules)
   constants.py          φ, golden angle, NQXConfig
   lut.py                ROM-LUT generator
   memory.py             HBM, SRAM, register files
   functional_units.py   GivensUnit, PolarUnit, QuantUnit, QJLUnit, PackUnit, AttentionUnit
-  mx_unit.py            OCP MX-Format quantization
-  subbit_unit.py        Sub-1-bit raisable quantization
-  pipeline.py           Cycle/energy accounting
-  isa.py                Opcode definitions, encoding, decoding
+  mx_unit.py            OCP MX-format quantization
+  subbit_unit.py        Sub-1-bit quantization experiments
+  pipeline.py           Cycle/energy accounting model
+  isa.py                24 opcodes: definitions, encoding, decoding
   assembler.py          NQ-ASM → bytecode
   disassembler.py       bytecode → NQ-ASM
   cpu.py                NQXCore: emulator orchestrator
@@ -190,94 +202,80 @@ nqx/                  Software emulator core (95 Python modules)
   counters.py           Performance counters (MMIO-mapped)
   jtag.py               IEEE 1149.1 TAP controller model
 
-rtl/                  SystemVerilog (7 modules + TB)
+rtl/                  SystemVerilog skeleton (5 design modules + testbench)
   givens_lane.sv        One Givens rotation lane (4 mul + 2 add)
   golden_rom.sv         ROM with cos/sin LUT
-  polar_unit.sv         CORDIC sqrt + atan2
-  quant_unit.sv         Lloyd-Max with min/max reduce tree
+  polar_unit.sv         CORDIC sqrt + atan2 — PLACEHOLDER datapath
+  quant_unit.sv         Lloyd-Max + min/max reduce tree — PLACEHOLDER mapping
   nqx_top.sv            Top-level wrapper
-  tb_nqx.sv             Verilator testbench (bit-exact vs Python)
-  formal/               SymbiYosys formal verification
+  tb_nqx.sv             Verilator testbench
+  formal/               SymbiYosys harness (never run to a proof)
   synth/                Yosys synthesis flow
   openlane/             OpenLane config for Skywater MPW
 
-asic/                 ASIC design docs
-  floorplan.md          50 mm² TSMC 7nm placement
-  timing.md             1 GHz target, slack analysis
-  tapeout_checklist.md  9-section pre-silicon checklist
-
+asic/                 Paper design docs (floorplan, timing, tape-out checklist)
 programs/             NQ-ASM example programs
-tests/                46 test files, 229 tests
+tests/                46 test files, 241 tests (+6 in sdk/ and firmware/)
 server/               FastAPI HTTP service
-deploy/               Docker, vast.ai, smoke tests
+deploy/               Docker, GPU host scripts, smoke tests
 demos/                TurboQuant comparison, pitch deck, scaling demo, notebooks
-bench/                Proof tasks (angular_uniformity, linear_quant, energy_proof, …)
+bench/                7 benchmark documents (angular_uniformity, phi_vs_random, …)
 docs/                 PRD, architecture, paper draft
 sdk/                  libnqx C ABI, install scripts
 firmware/             Boot ROM, Linux driver skeleton
-integrations/         vLLM/HF/llama.cpp adapters (placeholders for vast.ai)
+integrations/         vLLM/HF/llama.cpp adapter notes (not implemented)
 tools/                gen_rom.py, rig.py, dump_for_rtl.py, debug/
-tools/cli/            16 CLI launchers (nqx-claude, nqx-deepseek, nqx-demo, …)
-audits/               AI-agent prompts + results (this entire build by Claude+DeepSeek)
+tools/cli/            20 shell launchers
+audits/               AI-agent prompts used while building this (Russian)
 ```
 
 ## Compare against TurboQuant
 
-Run side-by-side:
-
 ```bash
-python demos/turboquant_emul.py             # Run TurboQuant random-rotation emulation
+python demos/turboquant_emul.py             # TurboQuant random-rotation emulation
 python demos/run_demo.py                    # Full comparison: cycles, energy, RMSE, determinism
 cat demos/side_by_side.md                   # Main comparison table
+cat bench/phi_vs_random.md                  # φ vs random head-to-head (φ loses on RMSE)
 ```
 
 ## How to cite
 
-If you use NQX-Core in research, please cite:
-
 ```bibtex
 @misc{nqxcore2026,
   title  = {NQX-Core: Pre-silicon emulator for golden-ratio KV-cache quantization},
-  author = {NQX-Core contributors},
+  author = {Doronin, Herman},
   year   = {2026},
-  note   = {Built on NautilusQuant by ORTODOX1},
-  url    = {https://github.com/<you>/nqx-core}
+  url    = {https://github.com/hermandoronin/NautilusQuant/tree/main/nqx-core}
 }
 ```
 
-See [`CITATION.cff`](CITATION.cff) for machine-readable form.
+See [`CITATION.cff`](CITATION.cff) for the machine-readable form.
 
 ## Contributing
 
-PRs welcome. See [`CONTRIBUTING.md`](CONTRIBUTING.md). All AI-agent task lists
-that built this project live in [`audits/prompts/`](audits/prompts/) for full
-transparency.
+PRs welcome. See [`CONTRIBUTING.md`](CONTRIBUTING.md). The AI-agent task lists
+used to build this project live in [`audits/prompts/`](audits/prompts/) (Russian)
+for transparency.
 
 ## License
 
-MIT — see [`LICENSE`](LICENSE).
+MIT — see [`LICENSE`](../LICENSE).
 
 ## Acknowledgments
 
-- Built on top of [**NautilusQuant**](https://github.com/ORTODOX1/NautilusQuant) by
-  [@ORTODOX1](https://github.com/ORTODOX1) — golden-angle insight, reference math,
-  upstream `nautilus_triton.py` and `nautilus_hardware.py`.
-- Theory: Hermann Weyl's [equidistribution theorem](https://en.wikipedia.org/wiki/Equidistribution_theorem)
-  (1916), still relevant 110 years later.
-- Inspiration: [TurboQuant](https://arxiv.org/abs/2504.19874) (Google ICLR 2026)
-  showed the rotation idea works; we're showing that determinism wins on the
-  right hardware.
-- Built using **Claude** + **DeepSeek-V4** as parallel coding agents — the entire
-  102-task development log is auditable in `audits/`.
+- Theory: Hermann Weyl's [equidistribution theorem](https://en.wikipedia.org/wiki/Equidistribution_theorem) (1916).
+- [TurboQuant](https://arxiv.org/abs/2504.19874) (Google ICLR 2026) established that
+  rotation before polar quantization works; this project asks what happens when the
+  rotation is a constant.
+- Built with **Claude** and **DeepSeek** as coding agents; the development log is in `audits/`.
 
 ---
 
 <div align="center">
 
-**Status**: Pre-silicon. RTL skeleton synthesizable. Ready for FPGA bring-up
-(Alveo U280) or Skywater 130 nm MPW shuttle via Efabless.
+**Status**: software only. RTL skeleton with placeholder arithmetic.
+No FPGA bring-up, no silicon.
 
-[Open an issue](../../issues) · [Join the discussion](../../discussions) ·
-[Read the pitch](demos/pitch.md)
+[Open an issue](../../issues) · [Read the pitch](demos/pitch.md)
 
 </div>
