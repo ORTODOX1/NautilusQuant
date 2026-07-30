@@ -4,3 +4,11 @@ __pycache__/
 .env
 node_modules/
 Новая папка/
+
+# Agent instruction files (local only)
+CLAUDE.md
+
+# Experiment output
+results/*.json
+results/*.csv
+results/*.jsonl
